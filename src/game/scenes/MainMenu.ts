@@ -1,0 +1,28 @@
+import { GameObjects, Scene } from "phaser";
+
+import { EventBus } from "../EventBus";
+
+const dpr = window.devicePixelRatio;
+export class MainMenu extends Scene {
+    background: GameObjects.Image;
+    logo: GameObjects.Image;
+    title: GameObjects.Text;
+    logoTween: Phaser.Tweens.Tween | null;
+
+    constructor() {
+        super("MainMenu");
+    }
+
+    create() {
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+
+        const book = this.add.image(centerX, centerY, "book");
+
+        book.setScale(0.333 * dpr);
+        book.setOrigin(0.5);
+
+
+        EventBus.emit("current-scene-ready", this);
+    }
+}
