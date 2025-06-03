@@ -1,0 +1,36 @@
+.container {
+    position: absolute;
+    top: 24px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+.topPanelItemContainer {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    background-color: rgba(66, 153, 255, 0.2);
+    padding: 10px 17px;
+    border-radius: 12px;
+    width: 88px;
+}
+.topPanelItemText {
+    color: #4299ff;
+    font-family: "Roboto";
+    font-weight: 700;
+}
+.plusIcon {
+    position: absolute;
+    right: -5px;
+}
+.invisible {
+    display: none;
+}

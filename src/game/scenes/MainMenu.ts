@@ -21,7 +21,10 @@ export class MainMenu extends Scene {
 
         book.setScale(0.333 * dpr);
         book.setOrigin(0.5);
-
+        book.setInteractive();
+        book.on("pointerdown", () => {
+             EventBus.emit("click", this);
+        });
 
         EventBus.emit("current-scene-ready", this);
     }
