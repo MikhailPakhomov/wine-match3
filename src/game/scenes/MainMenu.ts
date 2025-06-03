@@ -17,7 +17,7 @@ export class MainMenu extends Scene {
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
 
-        const book = this.add.image(centerX, centerY, "book");
+        const book = this.add.image(centerX, centerY-80, "book");
 
         book.setScale(0.333 * dpr);
         book.setOrigin(0.5);

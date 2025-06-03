@@ -1,0 +1,27 @@
+.BottomMenuContainer {
+    position: absolute;
+    z-index: 10;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+}
+
+.BottomMenuItemWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.bottomMenuItemIcon {
+}
+
+.bottomMenuItemText {
+}

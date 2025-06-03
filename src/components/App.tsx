@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { IRefPhaserGame, PhaserGame } from "./PhaserGame";
 import { MainMenu } from "../game/scenes/MainMenu";
 import TopMenuPanel from "./TopMenuPanel/TopMenuPanel";
+import PlayButton from "./ui/PlayButton/PlayButton";
+import BottomMenuPanel from "./BottomMenuPanel/BottomMenuPanel";
 
 function App() {
     // The sprite can only be moved in the MainMenu Scene
@@ -42,7 +44,8 @@ function App() {
         <div id="app">
             <TopMenuPanel />
             <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-            <div className="bottom">Нижняя панель</div>
+            <PlayButton />
+            <BottomMenuPanel />
         </div>
     );
 }
