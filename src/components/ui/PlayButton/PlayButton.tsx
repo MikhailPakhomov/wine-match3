@@ -1,10 +1,32 @@
+import { useEffect, useState } from "react";
 import styles from "./PlayButton.module.css";
+import { EventBus } from "../../../game/EventBus";
 
-const PlayButton = () => {
+interface PlayButtonProps {
+    onClick: () => void;
+}
+
+const PlayButton = ({onClick}: PlayButtonProps) => {
+    const [isVisible, setIsVisible] = useState(true);
+
+    useEffect(() => {
+        EventBus.on("click", () => {
+            setIsVisible(!isVisible);
+        });
+        return () => {
+            EventBus.removeListener("click");
+        };
+    }, [isVisible]);
     return (
         <>
-            <div className={styles.buttonWrapper}>
-                <button className={styles.button}>Играть</button>
+            <div
+                className={`${
+                    isVisible ? styles.buttonWrapper : styles.invisible
+                }`}
+            >
+                <button className={styles.button} onClick={onClick}>
+                    Играть
+                </button>
             </div>
         </>
     );

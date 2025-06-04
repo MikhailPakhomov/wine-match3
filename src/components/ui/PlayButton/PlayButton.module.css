@@ -26,3 +26,7 @@ button {
     font-weight: 500;
     cursor: pointer;
 }
+
+.invisible{
+display: none;
+}

@@ -1,4 +1,4 @@
-.BottomMenuContainer {
+.bottomMenuContainer {
     position: absolute;
     z-index: 10;
     margin-left: auto;
@@ -12,7 +12,7 @@
     gap: 24px;
 }
 
-.BottomMenuItemWrapper {
+.bottomMenuItemWrapper {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -24,4 +24,8 @@
 }
 
 .bottomMenuItemText {
+}
+
+.invisible {
+    display: none;
 }

@@ -1,9 +1,9 @@
-import { Boot } from './scenes/Boot';
-import { GameOver } from './scenes/GameOver';
-import { Game as MainGame } from './scenes/Game';
-import { MainMenu } from './scenes/MainMenu';
-import { AUTO, Game } from 'phaser';
-import { Preloader } from './scenes/Preloader';
+import { Boot } from "./scenes/Boot";
+
+import { Game as MainGame } from "./scenes/Game";
+import { MainMenu } from "./scenes/MainMenu";
+import { AUTO, Game } from "phaser";
+import { Preloader } from "./scenes/Preloader";
 
 const deviceWidth = window.innerWidth;
 const deviceHeight = window.innerHeight;
@@ -16,22 +16,15 @@ const config: Phaser.Types.Core.GameConfig = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: deviceWidth*window.devicePixelRatio,
-        height: deviceHeight*window.devicePixelRatio,
+        width: deviceWidth * window.devicePixelRatio,
+        height: deviceHeight * window.devicePixelRatio,
     },
 
-    scene: [
-        Boot,
-        Preloader,
-        MainMenu,
-        MainGame,
-
-    ],
+    scene: [Boot, Preloader, MainMenu, MainGame],
 };
 
 const StartGame = (parent: string) => {
     (async () => {
-
         const game = new Game({
             ...config,
             parent,
@@ -61,7 +54,6 @@ const StartGame = (parent: string) => {
 
         resize();
         window.addEventListener("resize", resize);
-
     })();
 };
 
