@@ -6,24 +6,10 @@ interface PlayButtonProps {
     onClick: () => void;
 }
 
-const PlayButton = ({onClick}: PlayButtonProps) => {
-    const [isVisible, setIsVisible] = useState(true);
-
-    useEffect(() => {
-        EventBus.on("click", () => {
-            setIsVisible(!isVisible);
-        });
-        return () => {
-            EventBus.removeListener("click");
-        };
-    }, [isVisible]);
+const PlayButton = ({ onClick }: PlayButtonProps) => {
     return (
         <>
-            <div
-                className={`${
-                    isVisible ? styles.buttonWrapper : styles.invisible
-                }`}
-            >
+            <div className={styles.buttonWrapper}>
                 <button className={styles.button} onClick={onClick}>
                     Играть
                 </button>

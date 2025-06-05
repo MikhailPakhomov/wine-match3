@@ -12,8 +12,13 @@ export class Game extends Scene {
     levelConfig!: LevelConfig;
     remainingMoves!: number;
 
-    movesText!: Phaser.GameObjects.Text;
-    movesBg!: Phaser.GameObjects.Image;
+    score: number;
+
+    scoreContainer: Phaser.GameObjects.Container;
+    movesContainer: Phaser.GameObjects.Container;
+    scoreText: Phaser.GameObjects.Text;
+    movesText: Phaser.GameObjects.Text;
+    movesBg: Phaser.GameObjects.Image;
     pauseButton!: Phaser.GameObjects.Image;
 
     selectedTile: Phaser.GameObjects.Sprite | null = null;
@@ -2336,7 +2341,7 @@ export class Game extends Scene {
 
         if (!this.textures.exists(bgKey)) {
             const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-            graphics.fillStyle(0x4299FF, 0.2);
+            graphics.fillStyle(0x4299ff, 0.2);
             graphics.fillRoundedRect(
                 0,
                 0,
@@ -2388,7 +2393,7 @@ export class Game extends Scene {
                 circleY,
                 goal.count.toString(),
                 {
-                    font: `800 ${14 * dpr}px Nunito`,
+                    font: `800 ${14 * dpr}px Roboto`,
                     color: "#4299FF",
                 }
             );
@@ -2484,6 +2489,7 @@ export class Game extends Scene {
     }
 
     create() {
+this.score = 0;
         this.holePositions = new Set();
         this.isProcessing = false;
         this.isInputLocked = false;
@@ -2664,34 +2670,31 @@ export class Game extends Scene {
             });
         });
 
-        this.movesBg = this.add.image(
-            this.offsetX + 50 * dpr,
-            this.offsetY - 104 * dpr,
-            "moves_bg"
+        this.movesContainer = this.add.container(
+            this.cameras.main.centerX, // по центру экрана
+            this.offsetY - 104 * dpr // по высоте как раньше
         );
-        this.movesBg.setOrigin(0.5);
-        this.movesBg.setDepth(100);
-        this.movesBg.setDisplaySize(83 * dpr, 40 * dpr);
+        this.movesContainer.setDepth(100);
 
-        this.movesText = this.add.text(
-            this.movesBg.x,
-            this.movesBg.y - 2 * dpr,
-            "",
-            {
-                font: `800 ${20 * dpr}px Roboto`,
-                color: "#0095ff",
-            }
-        );
+        const movesIcon = this.add.image(-30 * dpr, 0, "moves_icon");
+        movesIcon.setDisplaySize(24 * dpr, 24 * dpr);
+        movesIcon.setOrigin(0.5);
+
+        this.movesText = this.add.text(10 * dpr, 0, "", {
+            font: `800 ${24 * dpr}px Roboto`,
+            color: "#0095ff",
+        });
         this.movesText.setOrigin(0.5);
-        this.movesText.setDepth(101);
         this.movesText.setResolution(dpr < 2 ? 2 : dpr);
+
+        this.movesContainer.add([movesIcon, this.movesText]);
 
         this.updateMovesUI();
 
         this.pauseButton = this.add.image(
             this.offsetX + cellSize * cols - 10 * dpr,
             this.offsetY - 104 * dpr,
-            "pause"
+            "pause_btn"
         );
         this.pauseButton.setOrigin(0.5);
         this.pauseButton.setInteractive({ useHandCursor: true });
@@ -2707,6 +2710,28 @@ export class Game extends Scene {
             });
             this.scene.pause("Game");
         });
+
+        this.scoreContainer = this.add.container(
+            this.offsetX+10*dpr, // позиция контейнера по X
+            this.offsetY - 104 * dpr // позиция по Y
+        );
+        this.scoreContainer.setDepth(100);
+
+
+        const scoreIcon = this.add.image(-20 * dpr, 0, "score_icon");
+        scoreIcon.setOrigin(0.5);
+        scoreIcon.setDisplaySize(32 * dpr, 32 * dpr);
+
+
+        this.scoreText = this.add.text(20 * dpr, 0, `${this.score}`, {
+            font: `800 ${24 * dpr}px Roboto`,
+            color: "#0095ff",
+        });
+        this.scoreText.setOrigin(0.5);
+        this.scoreText.setResolution(dpr < 2 ? 2 : dpr);
+
+
+        this.scoreContainer.add([scoreIcon, this.scoreText]);
 
         this.createGoalsPanel(this.levelConfig.goals);
 

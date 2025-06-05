@@ -4,22 +4,10 @@ import ShopMenuIcon from "../ui/icons/ShopMenuIcon";
 import TasksMenuIcon from "../ui/icons/TasksMenuIcon";
 import TavernMenuIcon from "../ui/icons/TavernMenuIcon";
 import styles from "./BottomMenuPanel.module.css";
-import { EventBus } from "../../game/EventBus";
 
 const BottomMenuPanel = () => {
-
-        const [isVisible, setIsVisible] = useState(true);
-
-        useEffect(() => {
-            EventBus.on("click", () => {
-                setIsVisible(!isVisible);
-            });
-            return () => {
-                EventBus.removeListener("click");
-            };
-        }, [isVisible]);
     return (
-        <div className={`${isVisible ? styles.bottomMenuContainer : styles.invisible}`}>
+        <div className={styles.bottomMenuContainer}>
             <div className={styles.bottomMenuItemWrapper}>
                 <div className={styles.bottomMenuItemIcon}>
                     <RaitingMenuIcon />

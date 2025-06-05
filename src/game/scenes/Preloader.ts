@@ -1,3 +1,5 @@
+import { bridge } from "../../bridge";
+import { EventBus } from "./../EventBus";
 import { Scene } from "phaser";
 
 export class Preloader extends Scene {
@@ -6,7 +8,13 @@ export class Preloader extends Scene {
     }
 
     init() {
-        const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0x000000);
+        const bar = this.add.rectangle(
+            this.cameras.main.centerX - 460,
+            this.cameras.main.centerY,
+            4,
+            28,
+            0x000000
+        );
 
         //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
         this.load.on("progress", (progress: number) => {
@@ -30,9 +38,14 @@ export class Preloader extends Scene {
         this.load.image("box_full", "images/box_full.png");
         this.load.image("box_cracked", "images/box_cracked.png");
         this.load.image("rocket", "images/rocket.png");
+        this.load.image("rocketTrail", "images/rocket_trail.png");
+        this.load.image("pause_btn", "images/pause_btn.png");
+        this.load.image("moves_icon", "images/moves_icon.png");
+        this.load.image("score_icon", "images/score_icon.png");
     }
 
     create() {
         this.scene.start("MainMenu");
+        bridge.triggerGameLoaded(this);
     }
 }

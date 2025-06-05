@@ -2,6 +2,7 @@ import { GameObjects, Scene } from "phaser";
 import { LevelConfig, levelConfigs } from "../levels/levelConfig";
 
 import { EventBus } from "../EventBus";
+import { bridge } from "../../bridge";
 
 const dpr = window.devicePixelRatio;
 export class MainMenu extends Scene {
@@ -14,13 +15,14 @@ export class MainMenu extends Scene {
         super("MainMenu");
     }
 
-    startLevel(config) {
-        EventBus.emit("click", this);
+  startLevel(config?: LevelConfig) {
 
-        this.scene.start("Game", {
-            config: levelConfigs[1],
-        });
-    }
+    bridge.triggerStartLevel();
+
+    this.scene.start("Game", {
+      config: levelConfigs[0],
+    });
+  }
     create() {
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -30,10 +32,8 @@ export class MainMenu extends Scene {
         book.setScale(0.333 * dpr);
         book.setOrigin(0.5);
         book.setInteractive();
-        // book.on("pointerdown", () => {
 
-        // });
 
-        EventBus.emit("current-scene-ready", this);
+       bridge.triggerGameLoaded(this);
     }
 }
