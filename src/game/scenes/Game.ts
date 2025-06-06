@@ -2,6 +2,7 @@ import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { delayPromise, tweenPromise } from "../utils/tween-utils";
 import { LevelConfig, LevelGoal } from "../levels/levelConfig";
+import { bridge } from "../../bridge";
 
 const dpr = window.devicePixelRatio;
 export class Game extends Scene {
@@ -527,7 +528,7 @@ export class Game extends Scene {
 
     async removeMatches(matches: Phaser.GameObjects.Sprite[][]): Promise<void> {
         // this.sound.play("remove_tile");
-
+        console.log(matches);
         const tweens: Promise<void>[] = [];
         const tilesToDestroyLater: Phaser.GameObjects.Sprite[] = [];
         const damagedTiles = new Set<Phaser.GameObjects.Sprite>();
@@ -548,6 +549,7 @@ export class Game extends Scene {
 
         for (const group of matches) {
             for (const tile of group) {
+                this.score = this.score + 1;
                 const x = tile.getData("gridX");
                 const y = tile.getData("gridY");
 
@@ -667,7 +669,7 @@ export class Game extends Scene {
         }
 
         await Promise.all(tweens);
-
+        this.updateScore();
         for (const tile of tilesToDestroyLater) tile.destroy();
     }
 
@@ -2328,6 +2330,10 @@ export class Game extends Scene {
             `${this.remainingMoves}/${this.levelConfig.moves}`
         );
     }
+
+    updateScore() {
+        this.scoreText.setText(`${this.score}`);
+    }
     createGoalsPanel(goals: LevelGoal[]) {
         const panelY = this.offsetY - 40 * dpr;
         const centerX = this.cameras.main.centerX;
@@ -2446,14 +2452,17 @@ export class Game extends Scene {
             (goal) => goal.current >= goal.target
         );
     }
-    handleLevelWin() {
-        if (this.levelCompleted) return; // не срабатываем дважды
-        this.levelCompleted = true;
 
-        this.scene.start("WinScene", {
-            levelId: this.levelConfig.id,
-            difficult: this.levelConfig.difficult,
-        });
+    handleLevelWin() {
+        if (this.levelCompleted) return;
+        this.levelCompleted = true;
+        bridge.triggerScoreUpdate(this.score);
+        this.scene.stop("Game");
+        this.scene.start("MainMenu");
+        // this.scene.start("WinScene", {
+        //     levelId: this.levelConfig.id,
+        //     difficult: this.levelConfig.difficult,
+        // });
     }
     handleLevelLose() {
         this.scene.start("LoseScene", { config: this.levelConfig });
@@ -2461,6 +2470,7 @@ export class Game extends Scene {
     async checkWin() {
         if (this.remainingMoves > 0) {
             if (this.checkGoalsCompleted()) {
+                await this.playRemainingMovesBonus();
                 this.handleLevelWin();
             }
             return;
@@ -2469,6 +2479,7 @@ export class Game extends Scene {
         await this.waitForProcessingComplete();
 
         if (this.checkGoalsCompleted()) {
+            await this.playRemainingMovesBonus();
             this.handleLevelWin();
         } else {
             this.handleLevelLose();
@@ -2488,8 +2499,69 @@ export class Game extends Scene {
         });
     }
 
+    async playRemainingMovesBonus() {
+        while (this.remainingMoves > 0) {
+            this.remainingMoves--;
+            this.score += 5;
+            this.updateScore();
+            this.updateMovesUI();
+
+            await this.delay(1000);
+        }
+    }
+
+    delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    createBoostersPanel() {
+        const boosterData = [
+            { key: "booster_wand", count: 3 },
+            { key: "booster_hammer", count: 2 },
+            { key: "booster_glove", count: 1 },
+        ];
+
+        const spacing = 90 * dpr;
+        const totalWidth = spacing * boosterData.length;
+        const startX = this.cameras.main.centerX - totalWidth / 2 + spacing / 2;
+        const y = this.cameras.main.height - 100 * dpr;
+
+        boosterData.forEach((booster, index) => {
+            const x = startX + index * spacing;
+
+            const container = this.add.container(x, y);
+            container.setDepth(100);
+
+
+            const icon = this.add.image(0, 0, booster.key);
+            icon.setOrigin(0.5);
+            icon.setDisplaySize(48 * dpr, 48 * dpr);
+            icon.setInteractive({ useHandCursor: true });
+
+            const badgeBg = this.add.circle(
+                20 * dpr,
+                20 * dpr,
+                12 * dpr,
+                0x4299ff
+            );
+            const badgeText = this.add.text(
+                20 * dpr,
+                20 * dpr,
+                `${booster.count}`,
+                {
+                    font: `700 ${16 * dpr}px Roboto`,
+                    color: "#ffffff",
+                }
+            );
+            badgeText.setOrigin(0.5);
+            badgeText.setResolution(dpr < 2 ? 2 : dpr);
+
+            container.add([icon, badgeBg, badgeText]);
+        });
+    }
+
     create() {
-this.score = 0;
+        this.score = 0;
         this.holePositions = new Set();
         this.isProcessing = false;
         this.isInputLocked = false;
@@ -2702,26 +2774,29 @@ this.score = 0;
         this.pauseButton.setDisplaySize(this.cellSize, this.cellSize);
         this.pauseButton.on("pointerdown", () => {
             // this.sound.play("click");
-            this.scene.launch("Pause", {
-                cellSize: this.cellSize,
-                offsetX: this.offsetX,
-                offsetY: this.offsetY,
-                cols: this.cols,
-            });
-            this.scene.pause("Game");
+
+            // this.scene.launch("Pause", {
+            //     cellSize: this.cellSize,
+            //     offsetX: this.offsetX,
+            //     offsetY: this.offsetY,
+            //     cols: this.cols,
+            // });
+            // this.scene.pause("Game");
+
+            bridge.triggerScoreUpdate(this.score);
+            this.scene.stop("Game");
+            this.scene.start("MainMenu");
         });
 
         this.scoreContainer = this.add.container(
-            this.offsetX+10*dpr, // позиция контейнера по X
+            this.offsetX + 10 * dpr, // позиция контейнера по X
             this.offsetY - 104 * dpr // позиция по Y
         );
         this.scoreContainer.setDepth(100);
 
-
         const scoreIcon = this.add.image(-20 * dpr, 0, "score_icon");
         scoreIcon.setOrigin(0.5);
         scoreIcon.setDisplaySize(32 * dpr, 32 * dpr);
-
 
         this.scoreText = this.add.text(20 * dpr, 0, `${this.score}`, {
             font: `800 ${24 * dpr}px Roboto`,
@@ -2729,7 +2804,6 @@ this.score = 0;
         });
         this.scoreText.setOrigin(0.5);
         this.scoreText.setResolution(dpr < 2 ? 2 : dpr);
-
 
         this.scoreContainer.add([scoreIcon, this.scoreText]);
 
@@ -2744,7 +2818,7 @@ this.score = 0;
         // logo.setDepth(10);
         // logo.setScale(0.333 * dpr);
 
-        EventBus.emit("current-scene-ready", this);
+        this.createBoostersPanel();
     }
 
     init(data: { config: LevelConfig }) {

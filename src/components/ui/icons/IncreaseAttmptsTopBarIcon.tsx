@@ -22,8 +22,8 @@ const IncreaseAttmptsTopBarIcon = () => {
                 height="19"
                 rx="9.5"
                 stroke="#4299FF"
-                stroke-opacity="0.5"
-                stroke-width="3"
+                strokeOpacity="0.5"
+                strokeWidth="3"
             />
             <path
                 d="M15.0338 9.76562V11.4609H7.23694V9.76562H15.0338ZM12.0494 6.57812V14.8594H10.2291V6.57812H12.0494Z"

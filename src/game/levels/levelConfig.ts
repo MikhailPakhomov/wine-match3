@@ -129,8 +129,8 @@ export const levelConfigs: LevelConfig[] = [
         difficult: "medium",
         elements: ["smartphone", "energy", "message", "sim"],
         goals: [
-            { type: "sim", count: 25 },
-            { type: "energy", count: 25 },
+            { type: "sim", count: 10 },
+            { type: "energy", count: 10 },
         ],
         grid: [
             [

@@ -20,7 +20,7 @@ export class MainMenu extends Scene {
     bridge.triggerStartLevel();
 
     this.scene.start("Game", {
-      config: levelConfigs[0],
+      config: levelConfigs[1],
     });
   }
     create() {

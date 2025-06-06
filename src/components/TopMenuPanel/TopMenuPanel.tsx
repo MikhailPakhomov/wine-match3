@@ -6,8 +6,18 @@ import RaitingTopBarIcon from "../ui/icons/RaitingTopBarIcon";
 import CoinsTopBarIcon from "../ui/icons/CoinsTopBarIcon";
 import AttemptsTopBarIcon from "../ui/icons/AttemptsTopBarIcon";
 import IncreaseAttmptsTopBarIcon from "../ui/icons/IncreaseAttmptsTopBarIcon";
+import { useGameStore } from "../../store/useGameStore";
+import { bridge } from "../../bridge";
 
 const TopMenuPanel = () => {
+    const scoreCount = useGameStore((state) => state.scoreCount);
+    const setScore = useGameStore((state) => state.setScore);
+
+    useEffect(() => {
+        bridge.setOnScoreUpdate((score) => {
+            setScore(score);
+        });
+    }, [setScore]);
 
     return (
         <div className={styles.container}>
@@ -15,33 +25,27 @@ const TopMenuPanel = () => {
                 <HelpTopBarIcon />
             </div>
             <div className={styles.topPanelItemContainer}>
-
-                    <div className={styles.topPanelItemText}>100</div>
-                    <div className={styles.topPanelIcon}>
-                        <RaitingTopBarIcon />
-                    </div>
-
+                <div className={styles.topPanelItemText}>{scoreCount}</div>
+                <div className={styles.topPanelIcon}>
+                    <RaitingTopBarIcon />
+                </div>
             </div>
 
             <div className={styles.topPanelItemContainer}>
-
-                    <div className={styles.topPanelItemText}>100</div>
-                    <div className={styles.topPanelIcon}>
-                        <CoinsTopBarIcon />
-                    </div>
-
+                <div className={styles.topPanelItemText}>100</div>
+                <div className={styles.topPanelIcon}>
+                    <CoinsTopBarIcon />
+                </div>
             </div>
 
             <div className={styles.topPanelItemContainer}>
-
-                    <div className={styles.topPanelIcon}>
-                        <AttemptsTopBarIcon />
-                    </div>
-                    <div className={styles.topPanelItemText}>3</div>
-                    <div className={styles.plusIcon}>
-                        <IncreaseAttmptsTopBarIcon />
-                    </div>
-
+                <div className={styles.topPanelIcon}>
+                    <AttemptsTopBarIcon />
+                </div>
+                <div className={styles.topPanelItemText}>3</div>
+                <div className={styles.plusIcon}>
+                    <IncreaseAttmptsTopBarIcon />
+                </div>
             </div>
         </div>
     );
