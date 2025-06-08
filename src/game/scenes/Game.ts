@@ -537,258 +537,268 @@ export class Game extends Scene {
         return matches;
     }
 
-    async removeMatches(matches: Phaser.GameObjects.Sprite[][]): Promise<void> {
-        // this.sound.play("remove_tile");
-        console.log(matches);
-        const tweens: Promise<void>[] = [];
-        const tilesToDestroyLater: Phaser.GameObjects.Sprite[] = [];
-        const damagedTiles = new Set<Phaser.GameObjects.Sprite>();
-        const handled = new Set<Phaser.GameObjects.Sprite>();
-        const size = this.cellSize * this.scaleFactor;
-        const tilesJustDamagedInFirstPass =
-            new Set<Phaser.GameObjects.Sprite>();
+async removeMatches(matches: Phaser.GameObjects.Sprite[][]): Promise<void> {
+    const tweens: Promise<void>[] = [];
+    const tilesToDestroyLater: Phaser.GameObjects.Sprite[] = [];
+    const damagedTiles = new Set<Phaser.GameObjects.Sprite>();
+    const handled = new Set<Phaser.GameObjects.Sprite>();
+    const size = this.cellSize * this.scaleFactor;
+    const tilesJustDamagedInFirstPass = new Set<Phaser.GameObjects.Sprite>();
 
-        const directions = [
-            { dx: -1, dy: 0 },
-            { dx: 1, dy: 0 },
-            { dx: 0, dy: -1 },
-            { dx: 0, dy: 1 },
-        ];
+    const directions = [
+        { dx: -1, dy: 0 },
+        { dx: 1, dy: 0 },
+        { dx: 0, dy: -1 },
+        { dx: 0, dy: 1 },
+    ];
 
-        let iceSoundPlayed = false;
-        let boxSoundPlayed = false;
+    let iceSoundPlayed = false;
+    let boxSoundPlayed = false;
 
-        for (const group of matches) {
-            for (const tile of group) {
-                this.score = this.score + 1;
-                const x = tile.getData("gridX");
-                const y = tile.getData("gridY");
-
-                for (const { dx, dy } of directions) {
-                    const nx = x + dx;
-                    const ny = y + dy;
-                    if (!this.grid[ny] || !this.grid[ny][nx]) continue;
-
-                    const neighbor = this.grid[ny][nx];
-                    if (!neighbor || damagedTiles.has(neighbor)) continue;
-
-                    if (neighbor.getData("ice")) {
-                        if (!iceSoundPlayed) {
-                            // this.sound.play("ice");
-                            iceSoundPlayed = true;
-                        }
-                        const ice = neighbor.getData("ice");
-                        const iceSprite = neighbor.getData("iceSprite");
-                        if (ice.strength > 1) {
-                            ice.strength--;
-
-                            if (iceSprite) iceSprite.setTexture("ice_cracked");
-                        } else {
-                            if (iceSprite) iceSprite.destroy();
-                            neighbor.setData("ice", null);
-                            neighbor.setData("iceSprite", null);
-                        }
-                        tilesJustDamagedInFirstPass.add(neighbor);
-                        damagedTiles.add(neighbor);
-                    }
-
-                    if (neighbor.getData("box")) {
-                        if (!boxSoundPlayed) {
-                            // this.sound.play("box");
-                            boxSoundPlayed = true;
-                        }
-                        const box = neighbor.getData("box");
-                        const sprite =
-                            neighbor.getData("boxSprite") || neighbor;
-                        if (box.strength > 1) {
-                            box.strength--;
-                            sprite.setTexture("box_cracked");
-                        } else {
-                            const gx = neighbor.getData("gridX");
-                            const gy = neighbor.getData("gridY");
-                            this.grid[gy][gx] = null;
-
-                            sprite.setData("gridX", gx);
-                            sprite.setData("gridY", gy);
-                            sprite.setData("type", "box");
-
-                            await this.animateAndRemoveMatchesGoals(
-                                sprite,
-                                size,
-                                tweens,
-                                tilesToDestroyLater
-                            );
-
-                            tweens.push(
-                                tweenPromise(this, {
-                                    targets: sprite,
-                                    alpha: 0,
-                                    duration: 200,
-                                    onComplete: () => {
-                                        this.updateGoalProgress("box_full");
-                                        this.checkWin();
-                                        sprite.destroy();
-                                    },
-                                })
-                            );
-                        }
-                        damagedTiles.add(neighbor);
-                    }
-                }
-            }
+  
+    for (const row of this.grid) {
+        for (const tile of row) {
+            tile?.setData("justReleasedFromIce", false);
         }
+    }
 
-        for (const group of matches) {
-            for (const tile of group) {
-                if (handled.has(tile)) continue;
-                handled.add(tile);
+  
+    for (const group of matches) {
+        for (const tile of group) {
+            this.score += 1;
+            const x = tile.getData("gridX");
+            const y = tile.getData("gridY");
 
-                const x = tile.getData("gridX");
-                const y = tile.getData("gridY");
+            for (const { dx, dy } of directions) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (!this.grid[ny] || !this.grid[ny][nx]) continue;
 
-                const ice = tile.getData("ice");
-                const iceSprite = tile.getData("iceSprite");
+                const neighbor = this.grid[ny][nx];
+                if (!neighbor || damagedTiles.has(neighbor)) continue;
 
-                if (ice) {
-                    if (tilesJustDamagedInFirstPass.has(tile)) {
-                        continue;
+              
+                if (neighbor.getData("ice")) {
+                    if (!iceSoundPlayed) {
+                        // this.sound.play("ice");
+                        iceSoundPlayed = true;
                     }
-
+                    const ice = neighbor.getData("ice");
+                    const iceSprite = neighbor.getData("iceSprite");
                     if (ice.strength > 1) {
                         ice.strength--;
                         if (iceSprite) iceSprite.setTexture("ice_cracked");
                     } else {
                         if (iceSprite) iceSprite.destroy();
-                        tile.setData("ice", null);
-                        tile.setData("iceSprite", null);
+                        neighbor.setData("ice", null);
+                        neighbor.setData("iceSprite", null);
+                        neighbor.setData("justReleasedFromIce", true); 
                     }
-                    damagedTiles.add(tile);
-                    continue;
+                    tilesJustDamagedInFirstPass.add(neighbor);
+                    damagedTiles.add(neighbor);
                 }
 
-                if (this.grid[y][x] === tile) {
-                    this.grid[y][x] = null;
-                }
+              
+                if (neighbor.getData("box")) {
+                    if (!boxSoundPlayed) {
+                        // this.sound.play("box");
+                        boxSoundPlayed = true;
+                    }
+                    const box = neighbor.getData("box");
+                    const sprite = neighbor.getData("boxSprite") || neighbor;
+                    if (box.strength > 1) {
+                        box.strength--;
+                        sprite.setTexture("box_cracked");
+                    } else {
+                        const gx = neighbor.getData("gridX");
+                        const gy = neighbor.getData("gridY");
+                        this.grid[gy][gx] = null;
 
-                await this.animateAndRemoveMatchesGoals(
-                    tile,
-                    size,
-                    tweens,
-                    tilesToDestroyLater
-                );
+                        sprite.setData("gridX", gx);
+                        sprite.setData("gridY", gy);
+                        sprite.setData("type", "box");
+
+                        await this.animateAndRemoveMatchesGoals(
+                            sprite,
+                            size,
+                            tweens,
+                            tilesToDestroyLater
+                        );
+
+                        tweens.push(
+                            tweenPromise(this, {
+                                targets: sprite,
+                                alpha: 0,
+                                duration: 200,
+                                onComplete: () => {
+                                    this.updateGoalProgress("box_full");
+                                    this.checkWin();
+                                    sprite.destroy();
+                                },
+                            })
+                        );
+                    }
+                    damagedTiles.add(neighbor);
+                }
             }
         }
-
-        await Promise.all(tweens);
-        this.updateScore();
-        for (const tile of tilesToDestroyLater) tile.destroy();
     }
 
-async animateAndRemoveMatchesGoals(
-    tile: Phaser.GameObjects.Sprite,
-    size?: number,
-    tweens?: Promise<void>[],
-    tilesToDestroyLater?: Phaser.GameObjects.Sprite[],
-    isDiscoBall?: boolean
-): Promise<void> {
-    if (!tile || typeof tile.getData !== "function") return;
+    
+    for (const group of matches) {
+        for (const tile of group) {
+            if (handled.has(tile)) continue;
+            handled.add(tile);
 
-    if (tile.getData("removing")) return;
+            const x = tile.getData("gridX");
+            const y = tile.getData("gridY");
 
-    tile.setData("removing", true);
+            const ice = tile.getData("ice");
+            const iceSprite = tile.getData("iceSprite");
+            const isReleased = tile.getData("justReleasedFromIce");
 
-    const type = tile.getData("type");
-    const isBox = tile.getData("box");
-    const goalType = isBox ? "box_full" : type; // ✅ важно
+            
+            if (ice || isReleased) {
+                
+                if (tilesJustDamagedInFirstPass.has(tile)) continue;
 
-    const goal = this.goalIcons?.[goalType];
-
-    const x = tile.getData("gridX");
-    const y = tile.getData("gridY");
-
-    if (goal) {
-        tile.setVisible(false);
-
-        const clone = this.add.sprite(
-            tile.x,
-            tile.y,
-            type === "box" ? "box_cracked" : type
-        );
-        clone.setDisplaySize(size, size);
-        clone.setDepth(1000);
-
-        const targetX = goal.icon.x;
-        const targetY = goal.icon.y;
-
-        this.spawnTileParticles(tile.x, tile.y, type);
-
-        tweens?.push(
-            tweenPromise(this, {
-                targets: clone,
-                x: targetX,
-                y: targetY,
-                scale: 0,
-                alpha: 0.9,
-                duration: 400,
-                ease: "Cubic.easeIn",
-                onComplete: () => {
-                    this.updateGoalProgress(goalType); // ✅ используем goalType, а не type
-                    this.checkWin();
-                    clone.destroy();
-
-                    if (this.grid?.[y]?.[x] === tile) {
-                        this.grid[y][x] = null;
-                    }
-
-                    tilesToDestroyLater?.push(tile);
-                },
-            })
-        );
-    } else {
-        tile.setVisible(true);
-        tile.setAlpha(1);
-        tile.setDisplaySize(size, size);
-
-        await tweenPromise(this, {
-            targets: tile,
-            scale: 0.45,
-            duration: 100,
-            ease: "Power1",
-            onComplete: () => {
-                if (!isDiscoBall) {
-                    // this.sound.play("remove_tile");
+                if (ice && ice.strength > 1) {
+                    ice.strength--;
+                    if (iceSprite) iceSprite.setTexture("ice_cracked");
+                } else if (ice) {
+                    if (iceSprite) iceSprite.destroy();
+                    tile.setData("ice", null);
+                    tile.setData("iceSprite", null);
+                    tile.setData("justReleasedFromIce", true);
                 }
-                this.spawnTileParticles(tile.x, tile.y, type);
-            },
-        });
+                damagedTiles.add(tile);
+                continue;
+            }
 
-        if (this.grid?.[y]?.[x] === tile) {
-            this.grid[y][x] = null;
+            
+            if (this.grid[y][x] === tile) {
+                this.grid[y][x] = null;
+            }
+
+            await this.animateAndRemoveMatchesGoals(
+                tile,
+                size,
+                tweens,
+                tilesToDestroyLater
+            );
         }
-
-        tweens?.push(
-            tweenPromise(this, {
-                targets: tile,
-                alpha: 0,
-                displayWidth: 0,
-                displayHeight: 0,
-                duration: 300,
-                ease: "Power1",
-                onComplete: () => {
-                    this.updateGoalProgress(goalType);
-                    this.checkWin();
-
-                    if (this.grid?.[y]?.[x] === tile) {
-                        this.grid[y][x] = null;
-                    }
-
-                    tilesToDestroyLater?.push(tile);
-                },
-            })
-        );
     }
+
+    await Promise.all(tweens);
+    this.updateScore();
+    for (const tile of tilesToDestroyLater) tile.destroy();
 }
 
+
+    async animateAndRemoveMatchesGoals(
+        tile: Phaser.GameObjects.Sprite,
+        size?: number,
+        tweens?: Promise<void>[],
+        tilesToDestroyLater?: Phaser.GameObjects.Sprite[],
+        isDiscoBall?: boolean
+    ): Promise<void> {
+        if (!tile || typeof tile.getData !== "function") return;
+
+        if (tile.getData("removing")) return;
+
+        tile.setData("removing", true);
+
+        const type = tile.getData("type");
+        const isBox = tile.getData("box");
+        const goalType = isBox ? "box_full" : type; 
+
+        const goal = this.goalIcons?.[goalType];
+
+        const x = tile.getData("gridX");
+        const y = tile.getData("gridY");
+
+        if (goal) {
+            tile.setVisible(false);
+
+            const clone = this.add.sprite(
+                tile.x,
+                tile.y,
+                type === "box" ? "box_cracked" : type
+            );
+            clone.setDisplaySize(size, size);
+            clone.setDepth(1000);
+
+            const targetX = goal.icon.x;
+            const targetY = goal.icon.y;
+
+            this.spawnTileParticles(tile.x, tile.y, type);
+
+            tweens?.push(
+                tweenPromise(this, {
+                    targets: clone,
+                    x: targetX,
+                    y: targetY,
+                    scale: 0,
+                    alpha: 0.9,
+                    duration: 400,
+                    ease: "Cubic.easeIn",
+                    onComplete: () => {
+                        this.updateGoalProgress(goalType); 
+                        this.checkWin();
+                        clone.destroy();
+
+                        if (this.grid?.[y]?.[x] === tile) {
+                            this.grid[y][x] = null;
+                        }
+
+                        tilesToDestroyLater?.push(tile);
+                    },
+                })
+            );
+        } else {
+            tile.setVisible(true);
+            tile.setAlpha(1);
+            tile.setDisplaySize(size, size);
+
+            await tweenPromise(this, {
+                targets: tile,
+                scale: 0.45,
+                duration: 100,
+                ease: "Power1",
+                onComplete: () => {
+                    if (!isDiscoBall) {
+                        // this.sound.play("remove_tile");
+                    }
+                    this.spawnTileParticles(tile.x, tile.y, type);
+                },
+            });
+
+            if (this.grid?.[y]?.[x] === tile) {
+                this.grid[y][x] = null;
+            }
+
+            tweens?.push(
+                tweenPromise(this, {
+                    targets: tile,
+                    alpha: 0,
+                    displayWidth: 0,
+                    displayHeight: 0,
+                    duration: 300,
+                    ease: "Power1",
+                    onComplete: () => {
+                        this.updateGoalProgress(goalType);
+                        this.checkWin();
+
+                        if (this.grid?.[y]?.[x] === tile) {
+                            this.grid[y][x] = null;
+                        }
+
+                        tilesToDestroyLater?.push(tile);
+                    },
+                })
+            );
+        }
+    }
 
     spawnTileParticles(x: number, y: number, type: string) {
         const blackParticlesGraphics = this.make.graphics({
