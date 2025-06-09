@@ -61,10 +61,13 @@ export class Game extends Scene {
     isPaused = false;
 
     isWandActive: boolean = false;
+    isHammerActive: boolean = false;
+
     boosterContainers: Record<string, Phaser.GameObjects.Container>;
 
     activeBoosterIcon: Phaser.GameObjects.Image | null;
     activeBoosterTween: Phaser.Tweens.Tween | null;
+
     constructor() {
         super("Game");
     }
@@ -80,27 +83,28 @@ export class Game extends Scene {
             sprite.setAlpha(1);
         });
 
-        sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-            if (this.isInputLocked) return;
-            const iceData = sprite.getData("ice");
-            const box = sprite.getData("box");
+sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    if (this.isInputLocked) return;
 
-            if (iceData && iceData.strength > 0 && !this.isWandActive) return;
+    const iceData = sprite.getData("ice");
+    const box = sprite.getData("box");
+    const isBoosterActive = this.isWandActive || this.isHammerActive;
 
-            if (box && box.strength > 0 && !this.isWandActive) return;
+    if (iceData && iceData.strength > 0 && !isBoosterActive) return;
+    if (box && box.strength > 0 && !isBoosterActive) return;
 
-            sprite.setData("pointerDown", {
-                x: pointer.x,
-                y: pointer.y,
-            });
+    sprite.setData("pointerDown", {
+        x: pointer.x,
+        y: pointer.y,
+    });
 
-            this.selectedSprite = sprite;
+    this.selectedSprite = sprite;
+    this.pointerDownPos = {
+        x: pointer.x,
+        y: pointer.y,
+    };
+});
 
-            this.pointerDownPos = {
-                x: pointer.x,
-                y: pointer.y,
-            };
-        });
         sprite.on("pointerup", (pointer: Phaser.Input.Pointer) => {
             this.input.emit("pointerup", pointer);
         });
@@ -109,6 +113,7 @@ export class Game extends Scene {
         if (this.isProcessing || this.isInputLocked) return;
 
         this.isInputLocked = true;
+
         if (this.isWandActive) {
             this.clearActiveBoosterVisual();
             await this.useWandOnTile(tile);
@@ -116,6 +121,15 @@ export class Game extends Scene {
             this.isWandActive = false;
             return;
         }
+
+        if (this.isHammerActive) {
+            this.clearActiveBoosterVisual();
+            await this.useHammerOnTile(tile);
+            this.isHammerActive = false;
+            this.isInputLocked = false;
+            return;
+        }
+
         const baseSize = this.cellSize * this.scaleFactor;
 
         try {
@@ -2534,50 +2548,7 @@ export class Game extends Scene {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    // createBoostersPanel() {
-    //     const boosterData = [
-    //         { key: "booster_wand", count: 3 },
-    //         { key: "booster_hammer", count: 2 },
-    //         { key: "booster_glove", count: 1 },
-    //     ];
 
-    //     const spacing = 90 * dpr;
-    //     const totalWidth = spacing * boosterData.length;
-    //     const startX = this.cameras.main.centerX - totalWidth / 2 + spacing / 2;
-    //     const y = this.cameras.main.height - 100 * dpr;
-
-    //     boosterData.forEach((booster, index) => {
-    //         const x = startX + index * spacing;
-
-    //         const container = this.add.container(x, y);
-    //         container.setDepth(100);
-
-    //         const icon = this.add.image(0, 0, booster.key);
-    //         icon.setOrigin(0.5);
-    //         icon.setDisplaySize(48 * dpr, 48 * dpr);
-    //         icon.setInteractive({ useHandCursor: true });
-
-    //         const badgeBg = this.add.circle(
-    //             20 * dpr,
-    //             20 * dpr,
-    //             12 * dpr,
-    //             0x4299ff
-    //         );
-    //         const badgeText = this.add.text(
-    //             20 * dpr,
-    //             20 * dpr,
-    //             `${booster.count}`,
-    //             {
-    //                 font: `700 ${16 * dpr}px Roboto`,
-    //                 color: "#ffffff",
-    //             }
-    //         );
-    //         badgeText.setOrigin(0.5);
-    //         badgeText.setResolution(dpr < 2 ? 2 : dpr);
-
-    //         container.add([icon, badgeBg, badgeText]);
-    //     });
-    // }
 
     createBoostersPanel() {
         this.boosterContainers = {};
@@ -2591,7 +2562,7 @@ export class Game extends Scene {
         const spacing = 90 * dpr;
         const totalWidth = spacing * boosterData.length;
         const startX = this.cameras.main.centerX - totalWidth / 2 + spacing / 2;
-        // const y = this.cameras.main.height - 100 * dpr;
+
         const y =
             this.cameras.main.centerY +
             (this.rows * this.cellSize) / 2 +
@@ -2635,7 +2606,7 @@ export class Game extends Scene {
                 icon.on("pointerdown", () => {
                     if (booster.count <= 0) return;
 
-                    // если уже активен — отключаем
+
                     if (this.isWandActive) {
                         this.isWandActive = false;
                         this.clearActiveBoosterVisual();
@@ -2643,13 +2614,42 @@ export class Game extends Scene {
                     }
 
                     this.clearActiveBoosterVisual();
+
                     this.isWandActive = true;
                     this.activeBoosterIcon = icon;
 
                     this.activeBoosterTween = this.tweens.add({
                         targets: icon,
-                        scaleX: 0.5 * dpr,
-                        scaleY: 0.5 * dpr,
+                        scaleX: 0.4 * dpr,
+                        scaleY: 0.4 * dpr,
+                        duration: 300,
+                        ease: "Sine.easeInOut",
+                        yoyo: true,
+                        repeat: -1,
+                    });
+                });
+            }
+
+            if (booster.key === "booster_hammer") {
+                icon.on("pointerdown", () => {
+                    console.log("booster_hammer");
+                    if (booster.count <= 0) return;
+
+                    if (this.isHammerActive) {
+                        this.isHammerActive = false;
+                        this.clearActiveBoosterVisual();
+                        return;
+                    }
+
+                    this.clearActiveBoosterVisual();
+
+                    this.isHammerActive = true;
+                    this.activeBoosterIcon = icon;
+
+                    this.activeBoosterTween = this.tweens.add({
+                        targets: icon,
+                        scaleX: 0.4 * dpr,
+                        scaleY: 0.4 * dpr,
                         duration: 300,
                         ease: "Sine.easeInOut",
                         yoyo: true,
@@ -2706,6 +2706,7 @@ export class Game extends Scene {
                     tweens,
                     tilesToDestroyLater
                 );
+
                 await Promise.all(tweens);
                 tilesToDestroyLater.forEach((t) => t.destroy());
 
@@ -2738,6 +2739,8 @@ export class Game extends Scene {
             this.grid[y][x] = null;
 
             this.decreaseBoosterCount("booster_wand");
+            this.score += 1;
+            this.updateScore();
 
             await this.dropTiles();
             await this.fillEmptyTiles();
@@ -2786,14 +2789,17 @@ export class Game extends Scene {
             this.activeBoosterIcon.setScale(0.333 * dpr);
             this.activeBoosterIcon = null;
         }
+
+        this.isWandActive = false;
+        this.isHammerActive = false;
     }
+
     async playWandEffectToTile(
         targetTile: Phaser.GameObjects.Sprite
     ): Promise<void> {
         const boosterContainer = this.boosterContainers?.["booster_wand"];
         if (!boosterContainer) return;
 
-        // Найдём иконку палочки в контейнере
         const icon = boosterContainer.list.find(
             (child) =>
                 (child as Phaser.GameObjects.Image).texture?.key ===
@@ -2811,7 +2817,6 @@ export class Game extends Scene {
         wand.setDepth(1000);
         wand.setScale(0.333 * dpr);
 
-        // Позиция цели
         const targetX = targetTile.x;
         const targetY = targetTile.y;
 
@@ -2823,20 +2828,212 @@ export class Game extends Scene {
             alpha: 0.7,
             duration: 300,
             ease: "Cubic.easeInOut",
-            // onComplete: async () => {
-            //     await tweenPromise(this, {
-            //         targets: wand,
-            //         angle: 360,
-            //         scale: 0.333 * dpr,
-            //         duration: 300,
-            //         ease: "Cubic.easeInOut",
-            //     });
-            //     wand.destroy();
-            // },
+            onComplete: () => {
+                this.cameras.main.flash(150, 200, 220, 255);
+            },
         });
 
-wand.destroy();
-        
+        wand.destroy();
+    }
+
+    async useHammerOnTile(target: Phaser.GameObjects.Sprite) {
+        this.cameras.main.flash(150, 200, 220, 255);
+        this.cameras.main.shake(200, 0.02);
+
+        const row = target.getData("gridY");
+        const col = target.getData("gridX");
+
+        const toAffect: Phaser.GameObjects.Sprite[] = [];
+
+        // Строка
+        for (let c = 0; c < this.grid[0].length; c++) {
+            const t = this.grid[row][c];
+            if (t) toAffect.push(t);
+        }
+
+        // Колонка
+        for (let r = 0; r < this.grid.length; r++) {
+            if (r === row) continue;
+            const t = this.grid[r][col];
+            if (t) toAffect.push(t);
+        }
+
+        const tweens: Promise<void>[] = [];
+        const tilesToDestroyLater: Phaser.GameObjects.Sprite[] = [];
+
+
+        for (const tile of toAffect) {
+            const x = tile.getData("gridX");
+            const y = tile.getData("gridY");
+
+            const box = tile.getData("box");
+            const ice = tile.getData("ice");
+            const isHelper = tile.getData("isHelper");
+
+            if (box) {
+                const boxData = tile.getData("box");
+                if (boxData.strength > 1) {
+                    boxData.strength--;
+                    const newTexture =
+                        boxData.strength === 1 ? "box_cracked" : "box_full";
+                    tile.setTexture(newTexture);
+                    tile.setData("box", boxData);
+                } else {
+                    const goal = this.goalIcons?.["box_full"];
+                    if (goal) {
+                        const clone = this.add.sprite(
+                            tile.x,
+                            tile.y,
+                            "box_cracked"
+                        );
+                        clone.setDisplaySize(this.cellSize, this.cellSize);
+                        clone.setDepth(1000);
+                        tile.setVisible(false);
+
+                        tweens.push(
+                            tweenPromise(this, {
+                                targets: clone,
+                                x: goal.icon.x,
+                                y: goal.icon.y,
+                                scale: 0,
+                                alpha: 1,
+                                duration: 400,
+                                ease: "Cubic.easeIn",
+                                onComplete: () => {
+                                    this.updateGoalProgress("box");
+                                    this.checkWin();
+                                    clone.destroy();
+                                    tile.destroy();
+
+                                    if (this.grid?.[y]?.[x] === tile) {
+                                        this.grid[y][x] = null;
+                                    }
+                                },
+                            })
+                        );
+                    }
+                }
+                continue;
+            }
+
+            if (ice) {
+                const iceData = tile.getData("ice");
+                const newStrength = iceData.strength - 1;
+                tile.setData("ice", { strength: newStrength });
+
+                if (newStrength > 0) {
+                    this.updateIceVisual(tile, newStrength);
+                } else {
+                    this.removeIceVisual(tile);
+                    tile.setData("ice", null);
+                    tile.setData("iceSprite", null);
+                }
+
+                continue;
+            }
+
+            if (isHelper) {
+                continue;
+            }
+
+            const type = tile.getData("type");
+            const isTarget = this.levelConfig.goals.some(
+                (goal) =>
+                    goal.type === type ||
+                    (type === "box" && goal.type === "box_full")
+            );
+
+            if (isTarget && !tile.getData("removing")) {
+                await this.animateAndRemoveMatchesGoals(
+                    tile,
+                    this.cellSize - 5 * dpr,
+                    tweens,
+                    tilesToDestroyLater
+                );
+                this.score += 1;
+                this.updateScore();
+            } else {
+                const originalSize = this.cellSize;
+                tweens.push(
+                    tweenPromise(this, {
+                        targets: tile,
+                        alpha: 0,
+                        duration: 80,
+                        ease: "Power2",
+                        onUpdate: () => {
+                            const progress = tile.alpha;
+                            const size = Phaser.Math.Linear(
+                                originalSize,
+                                0,
+                                1 - progress
+                            );
+                            tile.setDisplaySize(size, size);
+                        },
+                        onComplete: () => {
+                            this.spawnTileParticles(tile.x, tile.y, type);
+                            tile.destroy();
+                            this.grid[y][x] = null;
+                            this.score += 1;
+                            this.updateScore();
+                        },
+                    })
+                );
+            }
+        }
+
+        await this.animateHammerStrike(target);
+
+        await Promise.all(tweens);
+
+        for (const tile of tilesToDestroyLater) {
+            tile.destroy();
+        }
+
+        this.decreaseBoosterCount("booster_hammer");
+        await delayPromise(this, 100);
+        await this.dropTiles();
+        await this.fillEmptyTiles();
+        await this.processMatchesLoop();
+        await this.reshuffleBoardIfNoMoves();
+    }
+
+    async animateHammerStrike(target: Phaser.GameObjects.Sprite) {
+        const hammer = this.add.image(
+            target.x,
+            target.y - 100,
+            "booster_hammer"
+        );
+        hammer.setDepth(1000);
+
+        return new Promise<void>((resolve) => {
+            this.tweens.add({
+                targets: hammer,
+                y: target.y,
+                duration: 250,
+                ease: "Back.easeOut",
+                onComplete: () => {
+                    hammer.destroy();
+                    resolve();
+                },
+            });
+        });
+    }
+
+    updateIceVisual(tile: Phaser.GameObjects.Sprite, strength: number) {
+        const iceSprite = tile.getData("iceSprite");
+        if (iceSprite) {
+            const texture = strength === 1 ? "ice_cracked" : "ice_full";
+            iceSprite.setTexture(texture);
+        }
+    }
+
+    removeIceVisual(tile: Phaser.GameObjects.Sprite) {
+        const iceSprite = tile.getData("iceSprite");
+        if (iceSprite) {
+            iceSprite.destroy();
+        }
+        tile.setData("ice", null);
+        tile.setData("iceSprite", null);
     }
 
     create() {
@@ -3024,8 +3221,8 @@ wand.destroy();
         });
 
         this.movesContainer = this.add.container(
-            this.cameras.main.centerX, // по центру экрана
-            this.offsetY - 104 * dpr // по высоте как раньше
+            this.cameras.main.centerX,
+            this.offsetY - 104 * dpr
         );
         this.movesContainer.setDepth(100);
 
@@ -3070,8 +3267,8 @@ wand.destroy();
         });
 
         this.scoreContainer = this.add.container(
-            this.offsetX + 10 * dpr, // позиция контейнера по X
-            this.offsetY - 104 * dpr // позиция по Y
+            this.offsetX + cellSize / 2,
+            this.offsetY - 104 * dpr
         );
         this.scoreContainer.setDepth(100);
 
