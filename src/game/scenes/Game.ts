@@ -62,6 +62,7 @@ export class Game extends Scene {
 
     isWandActive: boolean = false;
     isHammerActive: boolean = false;
+    isGloveActive: boolean = false;
 
     boosterContainers: Record<string, Phaser.GameObjects.Container>;
 
@@ -88,7 +89,8 @@ export class Game extends Scene {
 
             const iceData = sprite.getData("ice");
             const box = sprite.getData("box");
-            const isBoosterActive = this.isWandActive || this.isHammerActive;
+            const isBoosterActive =
+                this.isWandActive || this.isHammerActive || this.isGloveActive;
 
             if (iceData && iceData.strength > 0 && !isBoosterActive) return;
             if (box && box.strength > 0 && !isBoosterActive) return;
@@ -129,6 +131,10 @@ export class Game extends Scene {
             this.isInputLocked = false;
             return;
         }
+        if (this.isGloveActive) {
+            // перчатка активна, но вся логика ниже остаётся — просто обрабатываем как обычный клик
+            // ↓ флаг сбросим внутри swapTiles
+        }
 
         const baseSize = this.cellSize * this.scaleFactor;
 
@@ -137,53 +143,146 @@ export class Game extends Scene {
 
             const helperType = tile.getData("helperType");
 
+            // if (isHelper) {
+            //     if (this.selectedTileTween) {
+            //         this.tweens.remove(this.selectedTileTween);
+            //         this.selectedTileTween = null;
+            //     }
+
+            //     if (this.selectedTile) {
+            //         const x1 = this.selectedTile.getData("gridX");
+            //         const y1 = this.selectedTile.getData("gridY");
+            //         const x2 = tile.getData("gridX");
+            //         const y2 = tile.getData("gridY");
+
+            //         const dx = Math.abs(x1 - x2);
+            //         const dy = Math.abs(y1 - y2);
+
+            //         if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || this.isGloveActive)  {
+            //             this.selectedTile.setDisplaySize(
+            //                 baseSize - 5 * dpr,
+            //                 baseSize - 5 * dpr
+            //             );
+            //             await this.basicSwap(this.selectedTile, tile);
+
+            //             if (helperType === "discoball") {
+            //                 await this._activateSingleHelper(
+            //                     tile,
+            //                     this.selectedTile,
+            //                     new Set()
+            //                 );
+            //                 this.selectedTile = null;
+
+            //                 return;
+            //             }
+
+            //             await this.activateHelperChain([tile]);
+            //             this.selectedTile = null;
+            //             if (this.isGloveActive) {
+            //                 this.isGloveActive = false;
+            //                 this.decreaseBoosterCount("booster_glove");
+            //                 this.clearActiveBoosterVisual();
+            //             }
+            //             return;
+            //         } else {
+            //             this.selectedTile.setDisplaySize(
+            //                 baseSize - 5 * dpr,
+            //                 baseSize - 5 * dpr
+            //             );
+            //             await this.activateHelperChain([tile]);
+            //             this.selectedTile = null;
+            //             if (this.isGloveActive) {
+            //                 this.isGloveActive = false;
+            //                 this.decreaseBoosterCount("booster_glove");
+            //                 this.clearActiveBoosterVisual();
+            //             }
+            //             return;
+            //         }
+            //     }
+
+            //     await this.activateHelperChain([tile]);
+            //     if (this.isGloveActive) {
+            //         this.isGloveActive = false;
+            //         this.decreaseBoosterCount("booster_glove");
+            //         this.clearActiveBoosterVisual();
+            //     }
+            //     return;
+            // }
+
             if (isHelper) {
-                if (this.selectedTileTween) {
-                    this.tweens.remove(this.selectedTileTween);
-                    this.selectedTileTween = null;
-                }
-
-                if (this.selectedTile) {
-                    const x1 = this.selectedTile.getData("gridX");
-                    const y1 = this.selectedTile.getData("gridY");
-                    const x2 = tile.getData("gridX");
-                    const y2 = tile.getData("gridY");
-
-                    const dx = Math.abs(x1 - x2);
-                    const dy = Math.abs(y1 - y2);
-
-                    if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                        this.selectedTile.setDisplaySize(
-                            baseSize - 5 * dpr,
-                            baseSize - 5 * dpr
+                if (isHelper && !this.isGloveActive) {
+                    if (helperType === "discoball" && this.selectedTile) {
+                        await this._activateSingleHelper(
+                            tile,
+                            this.selectedTile,
+                            new Set()
                         );
-                        await this.basicSwap(this.selectedTile, tile);
-
-                        if (helperType === "discoball") {
-                            await this._activateSingleHelper(
-                                tile,
-                                this.selectedTile,
-                                new Set()
-                            );
-                            this.selectedTile = null;
-                            return;
-                        }
-
-                        await this.activateHelperChain([tile]);
-                        this.selectedTile = null;
-                        return;
-                    } else {
-                        this.selectedTile.setDisplaySize(
-                            baseSize - 5 * dpr,
-                            baseSize - 5 * dpr
-                        );
-                        await this.activateHelperChain([tile]);
                         this.selectedTile = null;
                         return;
                     }
+
+                    await this.activateHelperChain([tile]);
+                    this.selectedTile = null;
+                    return;
                 }
 
-                await this.activateHelperChain([tile]);
+                const isSelected = !!this.selectedTile;
+                const x1 = this.selectedTile?.getData("gridX");
+                const y1 = this.selectedTile?.getData("gridY");
+                const x2 = tile.getData("gridX");
+                const y2 = tile.getData("gridY");
+                const dx = Math.abs(x1 - x2);
+                const dy = Math.abs(y1 - y2);
+
+                const canSwap =
+                    (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+
+                if (isSelected && (canSwap || this.isGloveActive)) {
+                    this.tweens.remove(this.selectedTileTween);
+                    this.selectedTile.setDisplaySize(
+                        baseSize - 5 * dpr,
+                        baseSize - 5 * dpr
+                    );
+
+                    await this.basicSwap(this.selectedTile, tile);
+
+                    if (helperType === "discoball") {
+                        await this._activateSingleHelper(
+                            tile,
+                            this.selectedTile,
+                            new Set()
+                        );
+                    } else {
+                        await this.activateHelperChain([tile]);
+                    }
+
+                    this.selectedTile = null;
+                    this.selectedTileTween = null;
+
+                    if (this.isGloveActive) {
+                        this.isGloveActive = false;
+                        this.decreaseBoosterCount("booster_glove");
+                        this.clearActiveBoosterVisual();
+                    }
+
+                    return;
+                }
+
+                if (this.selectedTileTween) {
+                    this.tweens.remove(this.selectedTileTween);
+                }
+
+                this.selectedTile = tile;
+                this.selectedTileTween = this.tweens.add({
+                    targets: tile,
+                    displayWidth: baseSize * 1.1,
+                    displayHeight: baseSize * 1.1,
+                    ease: "Sine.easeInOut",
+                    duration: 300,
+                    repeat: -1,
+                    yoyo: true,
+                });
+
                 return;
             }
 
@@ -196,6 +295,8 @@ export class Game extends Scene {
                 repeat: -1,
                 yoyo: true,
             };
+
+
 
             if (!this.selectedTile) {
                 this.selectedTile = tile;
@@ -371,9 +472,11 @@ export class Game extends Scene {
 
         const matches = this.findMatches?.();
         if (matches && matches.length > 0) {
-            this.remainingMoves--;
-            this.updateMovesUI();
-            this.checkWin();
+            if (!this.isGloveActive) {
+                this.remainingMoves--;
+                this.updateMovesUI();
+                this.checkWin();
+            }
 
             this.removeMatches(matches);
 
@@ -410,15 +513,27 @@ export class Game extends Scene {
             await delayPromise(this, 100);
             await this.fillEmptyTiles();
             await this.processMatchesLoop();
+
             await this.reshuffleBoardIfNoMoves();
         } else {
-            await this.undoSwap(tileA, tileB, oldCoords);
+            if (!this.isGloveActive) {
+                await this.undoSwap(tileA, tileB, oldCoords);
+            }
         }
+        if (this.isGloveActive) {
+            console.log(555);
+            this.isGloveActive = false;
+            this.decreaseBoosterCount("booster_glove");
+            this.clearActiveBoosterVisual();
+        }
+        this.isProcessing = false;
+        this.isInputLocked = false;
     }
     async swapTiles(
         tileA: Phaser.GameObjects.Sprite,
         tileB: Phaser.GameObjects.Sprite
     ) {
+        console.log(666);
         if (this.isProcessing) return;
         this.isProcessing = true;
 
@@ -439,33 +554,67 @@ export class Game extends Scene {
                 ease: "Cubic.easeOut",
             });
             tileA.setAngle(0);
+
             await this._activateSingleHelper(tileA, tileB, new Set());
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
         if (isDiscoB && !isDiscoA) {
             await this.basicSwap(tileA, tileB);
+
             await this._activateSingleHelper(tileB, tileA, new Set());
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
         if (isDiscoA && isDiscoB) {
             await this.clearBoard();
             await this.fillEmptyTiles();
             await this.processMatchesLoop();
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
 
         if (isHelperA && isHelperB) {
             await this.activateHelperChain([tileA, tileB]);
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
         if (isHelperA) {
             await this.basicSwap(tileA, tileB);
+
             await this.activateHelperChain([tileA]);
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
         if (isHelperB) {
             await this.basicSwap(tileA, tileB);
+
             await this.activateHelperChain([tileB]);
+            if (this.isGloveActive) {
+                this.isGloveActive = false;
+                this.decreaseBoosterCount("booster_glove");
+                this.clearActiveBoosterVisual();
+            }
             return;
         }
         await this.basicSwap(tileA, tileB);
@@ -1258,8 +1407,10 @@ export class Game extends Scene {
         triggerChain?: Set<Phaser.GameObjects.Sprite>
     ): Promise<void> {
         if (this.remainingMoves >= 0) {
-            this.remainingMoves--;
-            this.updateMovesUI();
+            if (!this.isGloveActive) {
+                this.remainingMoves--;
+                this.updateMovesUI();
+            }
         }
 
         this.cameras.main.flash(150, 200, 220, 255);
@@ -2662,6 +2813,33 @@ export class Game extends Scene {
                     });
                 });
             }
+
+            if (booster.key === "booster_glove") {
+                icon.on("pointerdown", () => {
+                    if (booster.count <= 0) return;
+
+                    if (this.isGloveActive) {
+                        this.isGloveActive = false;
+                        this.clearActiveBoosterVisual();
+                        return;
+                    }
+
+                    this.clearActiveBoosterVisual();
+
+                    this.isGloveActive = true;
+                    this.activeBoosterIcon = icon;
+
+                    this.activeBoosterTween = this.tweens.add({
+                        targets: icon,
+                        scaleX: 0.4 * dpr,
+                        scaleY: 0.4 * dpr,
+                        duration: 300,
+                        ease: "Sine.easeInOut",
+                        yoyo: true,
+                        repeat: -1,
+                    });
+                });
+            }
         });
     }
 
@@ -2797,6 +2975,7 @@ export class Game extends Scene {
 
         this.isWandActive = false;
         this.isHammerActive = false;
+        this.isGloveActive = false;
     }
 
     async playWandEffectToTile(
@@ -2842,9 +3021,6 @@ export class Game extends Scene {
     }
 
     async useHammerOnTile(target: Phaser.GameObjects.Sprite) {
-        this.cameras.main.flash(150, 200, 220, 255);
-        this.cameras.main.shake(200, 0.02);
-
         const row = target.getData("gridY");
         const col = target.getData("gridX");
 
@@ -3022,6 +3198,8 @@ export class Game extends Scene {
                 duration: 250,
                 ease: "Back.easeOut",
                 onComplete: () => {
+                    this.cameras.main.flash(150, 200, 220, 255);
+                    this.cameras.main.shake(200, 0.02);
                     hammer.destroy();
                     resolve();
                 },
@@ -3045,6 +3223,7 @@ export class Game extends Scene {
         tile.setData("ice", null);
         tile.setData("iceSprite", null);
     }
+
 
     create() {
         this.score = 0;
