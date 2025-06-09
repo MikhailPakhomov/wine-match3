@@ -647,9 +647,7 @@ export class Game extends Scene {
                                     alpha: 0,
                                     duration: 200,
                                     onComplete: () => {
-                                        this.
-
-                                        ("box_full");
+                                        this.updateGoalProgress("box_full");
                                         this.checkWin();
                                         sprite.destroy();
                                     },
