@@ -83,27 +83,27 @@ export class Game extends Scene {
             sprite.setAlpha(1);
         });
 
-sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-    if (this.isInputLocked) return;
+        sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            if (this.isInputLocked) return;
 
-    const iceData = sprite.getData("ice");
-    const box = sprite.getData("box");
-    const isBoosterActive = this.isWandActive || this.isHammerActive;
+            const iceData = sprite.getData("ice");
+            const box = sprite.getData("box");
+            const isBoosterActive = this.isWandActive || this.isHammerActive;
 
-    if (iceData && iceData.strength > 0 && !isBoosterActive) return;
-    if (box && box.strength > 0 && !isBoosterActive) return;
+            if (iceData && iceData.strength > 0 && !isBoosterActive) return;
+            if (box && box.strength > 0 && !isBoosterActive) return;
 
-    sprite.setData("pointerDown", {
-        x: pointer.x,
-        y: pointer.y,
-    });
+            sprite.setData("pointerDown", {
+                x: pointer.x,
+                y: pointer.y,
+            });
 
-    this.selectedSprite = sprite;
-    this.pointerDownPos = {
-        x: pointer.x,
-        y: pointer.y,
-    };
-});
+            this.selectedSprite = sprite;
+            this.pointerDownPos = {
+                x: pointer.x,
+                y: pointer.y,
+            };
+        });
 
         sprite.on("pointerup", (pointer: Phaser.Input.Pointer) => {
             this.input.emit("pointerup", pointer);
@@ -647,7 +647,9 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                     alpha: 0,
                                     duration: 200,
                                     onComplete: () => {
-                                        this.updateGoalProgress("box_full");
+                                        this.
+
+                                        ("box_full");
                                         this.checkWin();
                                         sprite.destroy();
                                     },
@@ -1560,6 +1562,8 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                     tweens,
                                     tilesToDestroyLater
                                 );
+                                this.score += 1;
+                                this.updateScore();
                             } else {
                                 const originalSize = this.cellSize;
                                 tweens.push(
@@ -1584,6 +1588,8 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                                 tile.getData("type")
                                             );
                                             tile.destroy();
+                                            this.score += 1;
+                                            this.updateScore();
                                         },
                                     })
                                 );
@@ -1736,6 +1742,8 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                     tweens,
                                     tilesToDestroyLater
                                 );
+                                this.score += 1;
+                                this.updateScore();
                             } else {
                                 const originalSize = this.cellSize;
                                 tweens.push(
@@ -1760,6 +1768,8 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                                 tile.getData("type")
                                             );
                                             tile.destroy();
+                                            this.score += 1;
+                                            this.updateScore();
                                         },
                                     })
                                 );
@@ -2548,8 +2558,6 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-
-
     createBoostersPanel() {
         this.boosterContainers = {};
 
@@ -2605,7 +2613,6 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
             if (booster.key === "booster_wand") {
                 icon.on("pointerdown", () => {
                     if (booster.count <= 0) return;
-
 
                     if (this.isWandActive) {
                         this.isWandActive = false;
@@ -2860,7 +2867,7 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
 
         const tweens: Promise<void>[] = [];
         const tilesToDestroyLater: Phaser.GameObjects.Sprite[] = [];
-
+        const helpersToActivate: Phaser.GameObjects.Sprite[] = [];
 
         for (const tile of toAffect) {
             const x = tile.getData("gridX");
@@ -2900,7 +2907,7 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                                 duration: 400,
                                 ease: "Cubic.easeIn",
                                 onComplete: () => {
-                                    this.updateGoalProgress("box");
+                                    this.updateGoalProgress("box_full");
                                     this.checkWin();
                                     clone.destroy();
                                     tile.destroy();
@@ -2933,6 +2940,7 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
             }
 
             if (isHelper) {
+                helpersToActivate.push(tile);
                 continue;
             }
 
@@ -2987,6 +2995,10 @@ sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
 
         for (const tile of tilesToDestroyLater) {
             tile.destroy();
+        }
+
+        if (helpersToActivate.length > 0) {
+            await this.activateHelperChain(helpersToActivate);
         }
 
         this.decreaseBoosterCount("booster_hammer");
