@@ -41,6 +41,10 @@ useEffect(() => {
   bridge.setOnStartLevel(() => {
     useGameStore.getState().setMainMenuUIVisible(false);
   });
+
+    bridge.setOnMainMenuUIVisible((visible) => {
+    useGameStore.getState().setMainMenuUIVisible(visible);
+  });
 }, []);
 
   return <div className="game-container" id="game-container"></div>;

@@ -3,6 +3,7 @@ type BridgeEvents = {
     onStartLevel?: () => void;
     onMainMenuUIVisible?: (visible: boolean) => void;
     onScoreUpdate?: (score: number) => void;
+    onHelpOpen?: (isOpen: boolean) => void;
 };
 
 const listeners: BridgeEvents = {};
@@ -24,6 +25,9 @@ export const bridge = {
         listeners.onScoreUpdate = cb;
     },
 
+
+
+
     triggerGameLoaded(scene: Phaser.Scene) {
         listeners.onGameLoaded?.(scene);
     },
@@ -38,4 +42,5 @@ export const bridge = {
     triggerScoreUpdate(score: number) {
         listeners.onScoreUpdate?.(score);
     },
+
 };

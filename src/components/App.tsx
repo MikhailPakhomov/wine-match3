@@ -21,6 +21,8 @@ function App() {
         }
     };
 
+
+
     return (
         <div id="app">
             {showMainMenuUI && <TopMenuPanel />}

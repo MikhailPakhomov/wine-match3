@@ -4,7 +4,7 @@ import { LevelConfig, levelConfigs } from "../levels/levelConfig";
 import { EventBus } from "../EventBus";
 import { bridge } from "../../bridge";
 
-const dpr = window.devicePixelRatio;
+const dpr = window.devicePixelRatio || 1;
 export class MainMenu extends Scene {
     background: GameObjects.Image;
     logo: GameObjects.Image;

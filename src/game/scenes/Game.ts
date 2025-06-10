@@ -4,7 +4,7 @@ import { delayPromise, tweenPromise } from "../utils/tween-utils";
 import { LevelConfig, LevelGoal } from "../levels/levelConfig";
 import { bridge } from "../../bridge";
 
-const dpr = window.devicePixelRatio;
+const dpr = window.devicePixelRatio || 1;
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
@@ -64,7 +64,6 @@ export class Game extends Scene {
     isHammerActive: boolean = false;
     isGloveActive: boolean = false;
 
-
     boosterContainers: Record<string, Phaser.GameObjects.Container>;
 
     activeBoosterIcon: Phaser.GameObjects.Image | null;
@@ -90,8 +89,7 @@ export class Game extends Scene {
 
             const iceData = sprite.getData("ice");
             const box = sprite.getData("box");
-            const isBoosterActive =
-                this.isWandActive || this.isHammerActive ;
+            const isBoosterActive = this.isWandActive || this.isHammerActive;
 
             if (iceData && iceData.strength > 0 && !isBoosterActive) return;
             if (box && box.strength > 0 && !isBoosterActive) return;
@@ -292,8 +290,6 @@ export class Game extends Scene {
                 repeat: -1,
                 yoyo: true,
             };
-
-
 
             if (!this.selectedTile) {
                 this.selectedTile = tile;
@@ -2706,11 +2702,9 @@ export class Game extends Scene {
     createBoostersPanel() {
         this.boosterContainers = {};
 
-        const boosterData = [
-            { key: "booster_wand", count: 3 },
-            { key: "booster_hammer", count: 2 },
-            { key: "booster_glove", count: 1 },
-        ];
+        const boosterData = this.levelConfig.boosters;
+
+
 
         const spacing = 90 * dpr;
         const totalWidth = spacing * boosterData.length;

@@ -4,6 +4,11 @@ import { Game as MainGame } from "./scenes/Game";
 import { MainMenu } from "./scenes/MainMenu";
 import { AUTO, Game } from "phaser";
 import { Preloader } from "./scenes/Preloader";
+import { Raiting } from "./scenes/Raiting";
+import { Shop } from "./scenes/Shop";
+import { Tavern } from "./scenes/Tavern";
+import { Tasks } from "./scenes/Tasks";
+import { Help } from "./scenes/Help";
 
 const deviceWidth = window.innerWidth;
 const deviceHeight = window.innerHeight;
@@ -20,7 +25,17 @@ const config: Phaser.Types.Core.GameConfig = {
         height: deviceHeight * window.devicePixelRatio,
     },
 
-    scene: [Boot, Preloader, MainMenu, MainGame],
+    scene: [
+        Boot,
+        Preloader,
+        MainMenu,
+        MainGame,
+        Raiting,
+        Shop,
+        Tavern,
+        Tasks,
+        Help,
+    ],
 };
 
 const StartGame = (parent: string) => {

@@ -8,6 +8,7 @@ import AttemptsTopBarIcon from "../ui/icons/AttemptsTopBarIcon";
 import IncreaseAttmptsTopBarIcon from "../ui/icons/IncreaseAttmptsTopBarIcon";
 import { useGameStore } from "../../store/useGameStore";
 import { bridge } from "../../bridge";
+import { navigateToScene } from "../../game/utils/navigateToScene";
 
 const TopMenuPanel = () => {
     const scoreCount = useGameStore((state) => state.scoreCount);
@@ -19,9 +20,14 @@ const TopMenuPanel = () => {
         });
     }, [setScore]);
 
+
+
     return (
         <div className={styles.container}>
-            <div className={styles.help}>
+            <div
+                className={styles.help}
+                onClick={() => navigateToScene("MainMenu", "Help")}
+            >
                 <HelpTopBarIcon />
             </div>
             <div className={styles.topPanelItemContainer}>

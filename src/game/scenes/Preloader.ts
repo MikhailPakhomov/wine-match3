@@ -2,6 +2,7 @@ import { bridge } from "../../bridge";
 import { EventBus } from "./../EventBus";
 import { Scene } from "phaser";
 
+const dpr = window.devicePixelRatio || 1;
 export class Preloader extends Scene {
     constructor() {
         super("Preloader");
