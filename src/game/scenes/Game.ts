@@ -91,7 +91,7 @@ export class Game extends Scene {
             const iceData = sprite.getData("ice");
             const box = sprite.getData("box");
             const isBoosterActive =
-                this.isWandActive || this.isHammerActive || this.isGloveActive;
+                this.isWandActive || this.isHammerActive ;
 
             if (iceData && iceData.strength > 0 && !isBoosterActive) return;
             if (box && box.strength > 0 && !isBoosterActive) return;
