@@ -9,23 +9,40 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
 }
-.topPanelItemContainer {
+
+.topPanelItemBg {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
     gap: 4px;
-    background-color: rgba(66, 153, 255, 0.2);
+    background-color: #f7d8a2;
     padding: 10px 17px;
+
     border-radius: 12px;
-    width: 88px;
+    width: 100px;
+    height: 35px;
 }
 .topPanelItemText {
-    color: #4299ff;
+    color: #7f5d4a;
     font-family: "Roboto";
     font-weight: 700;
+}
+.topPanelItemTextAttempts {
+    padding-right: 30px;
+    justify-content: flex-end;
+}
+.topPanelIcon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+right: 5px;
+}
+
+.topPanelIconAttempts {
+    left: 0px;
 }
 .plusIcon {
     position: absolute;

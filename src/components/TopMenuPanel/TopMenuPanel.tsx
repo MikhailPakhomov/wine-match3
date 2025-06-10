@@ -20,8 +20,6 @@ const TopMenuPanel = () => {
         });
     }, [setScore]);
 
-
-
     return (
         <div className={styles.container}>
             <div
@@ -31,26 +29,32 @@ const TopMenuPanel = () => {
                 <HelpTopBarIcon />
             </div>
             <div className={styles.topPanelItemContainer}>
-                <div className={styles.topPanelItemText}>{scoreCount}</div>
-                <div className={styles.topPanelIcon}>
-                    <RaitingTopBarIcon />
+                <div className={styles.topPanelItemBg}>
+                    <div className={styles.topPanelItemText}>{scoreCount}</div>
+                    <div className={styles.topPanelIcon}>
+                        <RaitingTopBarIcon />
+                    </div>
                 </div>
             </div>
 
             <div className={styles.topPanelItemContainer}>
-                <div className={styles.topPanelItemText}>100</div>
-                <div className={styles.topPanelIcon}>
-                    <CoinsTopBarIcon />
+                <div className={styles.topPanelItemBg}>
+                    <div className={styles.topPanelItemText}>100</div>
+                    <div className={styles.topPanelIcon}>
+                        <CoinsTopBarIcon />
+                    </div>
                 </div>
             </div>
 
             <div className={styles.topPanelItemContainer}>
-                <div className={styles.topPanelIcon}>
-                    <AttemptsTopBarIcon />
-                </div>
-                <div className={styles.topPanelItemText}>3</div>
-                <div className={styles.plusIcon}>
-                    <IncreaseAttmptsTopBarIcon />
+                <div className={`${styles.topPanelItemBg} ${styles.topPanelItemTextAttempts}` }>
+                    <div className={`${styles.topPanelIcon} ${styles.topPanelIconAttempts}`}>
+                        <AttemptsTopBarIcon />
+                    </div>
+                    <div className={`${styles.topPanelItemText}`}>3</div>
+                    <div className={styles.plusIcon}>
+                        <IncreaseAttmptsTopBarIcon />
+                    </div>
                 </div>
             </div>
         </div>

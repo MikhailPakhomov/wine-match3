@@ -15,15 +15,31 @@ export class MainMenu extends Scene {
         super("MainMenu");
     }
 
-  startLevel(config?: LevelConfig) {
+    startLevel(config?: LevelConfig) {
+        bridge.triggerStartLevel();
 
-    bridge.triggerStartLevel();
+        this.scene.start("Game", {
+            config: levelConfigs[12],
+        });
+    }
 
-    this.scene.start("Game", {
-      config: levelConfigs[12],
-    });
-  }
+    preload() {
+        this.load.image("background", "assets/images/bg.png");
+    }
+
     create() {
+        const bg = this.add.image(0, 0, "background").setOrigin(0.5, 0.5);
+
+        // Поместить фон в центр
+        bg.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+
+        // Вычислить масштаб по высоте и сохранить пропорции
+        const scaleY = this.cameras.main.height / bg.height;
+        bg.setScale(scaleY); // Пропорционально увеличится ширина
+
+        // Чтобы фон не двигался при скролле камеры
+        bg.setScrollFactor(0);
+
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
 
@@ -33,7 +49,6 @@ export class MainMenu extends Scene {
         book.setOrigin(0.5);
         book.setInteractive();
 
-
-       bridge.triggerGameLoaded(this);
+        bridge.triggerGameLoaded(this);
     }
 }

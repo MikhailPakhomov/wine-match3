@@ -10,9 +10,13 @@
     justify-content: center;
     align-items: center;
     width: 296px;
-    height: 58px;
-    background-color: #4299ff;
-    border-radius: 12px;
+    height: 96px;
+
+    background-image: url('assets/images/ui/play-btn.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    /* border-radius: 12px; */
 }
 button {
     background: none;

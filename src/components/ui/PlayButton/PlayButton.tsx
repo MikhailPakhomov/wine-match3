@@ -11,7 +11,7 @@ const PlayButton = ({ onClick }: PlayButtonProps) => {
         <>
             <div className={styles.buttonWrapper}>
                 <button className={styles.button} onClick={onClick}>
-                    Играть
+
                 </button>
             </div>
         </>

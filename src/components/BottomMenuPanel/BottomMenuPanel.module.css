@@ -24,6 +24,10 @@
 }
 
 .bottomMenuItemText {
+    font-family: "Roboto";
+    font-weight: 700;
+    font-size: 18px;
+    color: #ffffff;
 }
 
 .invisible {
