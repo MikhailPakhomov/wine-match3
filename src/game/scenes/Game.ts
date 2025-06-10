@@ -62,6 +62,7 @@ export class Game extends Scene {
 
     isWandActive: boolean = false;
     isHammerActive: boolean = false;
+    isGloveActive: boolean = false;
 
     boosterContainers: Record<string, Phaser.GameObjects.Container>;
 
@@ -126,6 +127,14 @@ export class Game extends Scene {
             this.clearActiveBoosterVisual();
             await this.useHammerOnTile(tile);
             this.isHammerActive = false;
+            this.isInputLocked = false;
+            return;
+        }
+
+        if (this.isGloveActive) {
+            this.clearActiveBoosterVisual();
+            await this.useGloveSwap(tile);
+            this.isGloveActive = false;
             this.isInputLocked = false;
             return;
         }
@@ -312,7 +321,8 @@ export class Game extends Scene {
 
     async basicSwap(
         tileA: Phaser.GameObjects.Sprite,
-        tileB: Phaser.GameObjects.Sprite
+        tileB: Phaser.GameObjects.Sprite,
+        skipMoveDeduction = false
     ) {
         // this.sound.play("move_tile");
         const xA = tileA.getData("gridX");
@@ -371,8 +381,10 @@ export class Game extends Scene {
 
         const matches = this.findMatches?.();
         if (matches && matches.length > 0) {
-            this.remainingMoves--;
-            this.updateMovesUI();
+            if (!skipMoveDeduction) {
+                this.remainingMoves--;
+                this.updateMovesUI();
+            }
             this.checkWin();
 
             this.removeMatches(matches);
@@ -2662,6 +2674,33 @@ export class Game extends Scene {
                     });
                 });
             }
+
+            if (booster.key === "booster_glove") {
+                icon.on("pointerdown", () => {
+                    if (booster.count <= 0) return;
+
+                    if (this.isGloveActive) {
+                        this.isGloveActive = false;
+                        this.clearActiveBoosterVisual();
+                        return;
+                    }
+
+                    this.clearActiveBoosterVisual();
+
+                    this.isGloveActive = true;
+                    this.activeBoosterIcon = icon;
+
+                    this.activeBoosterTween = this.tweens.add({
+                        targets: icon,
+                        scaleX: 0.4 * dpr,
+                        scaleY: 0.4 * dpr,
+                        duration: 300,
+                        ease: "Sine.easeInOut",
+                        yoyo: true,
+                        repeat: -1,
+                    });
+                });
+            }
         });
     }
 
@@ -3044,6 +3083,39 @@ export class Game extends Scene {
         }
         tile.setData("ice", null);
         tile.setData("iceSprite", null);
+    }
+
+    async useGloveSwap(tile: Phaser.GameObjects.Sprite) {
+        if (!this.selectedTile) {
+            this.selectedTile = tile;
+            this.selectedTileTween = this.tweens.add({
+                targets: tile,
+                scale: 0.4 * dpr,
+                yoyo: true,
+                repeat: -1,
+                duration: 300,
+                ease: "Sine.easeInOut",
+            });
+            return;
+        }
+
+        const x1 = this.selectedTile.getData("gridX");
+        const y1 = this.selectedTile.getData("gridY");
+        const x2 = tile.getData("gridX");
+        const y2 = tile.getData("gridY");
+
+        const dx = Math.abs(x1 - x2);
+        const dy = Math.abs(y1 - y2);
+
+        this.tweens.remove(this.selectedTileTween);
+        this.selectedTile.setScale(1);
+        this.selectedTileTween = null;
+
+        if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+            await this.basicSwap(this.selectedTile, tile, true); // <== важное отличие
+        }
+
+        this.selectedTile = null;
     }
 
     create() {
