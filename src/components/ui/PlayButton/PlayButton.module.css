@@ -12,7 +12,7 @@
     width: 296px;
     height: 96px;
 
-    background-image: url('assets/images/ui/play-btn.png');
+    background-image: url('/assets/images/ui/play-btn.png');
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
