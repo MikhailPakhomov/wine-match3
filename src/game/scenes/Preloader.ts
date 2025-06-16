@@ -28,6 +28,7 @@ export class Preloader extends Scene {
         this.load.setPath("assets");
         this.load.image("book", "images/book.png");
         this.load.image("tile_bg", "images/tile_bg.png");
+        this.load.image("field_bg", "images/field_bg.png");
         this.load.image("phone", "images/phone.png");
         this.load.image("smartphone", "images/smartphone.png");
         this.load.image("sim", "images/sim.png");

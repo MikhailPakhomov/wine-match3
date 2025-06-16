@@ -2584,7 +2584,7 @@ export class Game extends Scene {
                 circleY,
                 goal.count.toString(),
                 {
-                    font: `800 ${14 * dpr}px Roboto`,
+                    font: `700 ${14 * dpr}px Roboto`,
                     color: "#4299FF",
                 }
             );
@@ -2703,8 +2703,6 @@ export class Game extends Scene {
         this.boosterContainers = {};
 
         const boosterData = this.levelConfig.boosters;
-
-
 
         const spacing = 90 * dpr;
         const totalWidth = spacing * boosterData.length;
@@ -3294,6 +3292,15 @@ export class Game extends Scene {
 
         this.grid = [];
 
+        const filedBg = this.add.image(
+            this.offsetX + 3*(cellSize + gap) + cellSize/2,
+            this.offsetY +  3*(cellSize + gap) + cellSize / 2,
+            "field_bg"
+        );
+        filedBg.setOrigin(0.5);
+        filedBg.setAlpha(0.8);
+        filedBg.setDisplaySize(gridWidth, gridHeight);
+
         levelGrid.forEach((row, y) => {
             this.grid[y] = [];
 
@@ -3311,7 +3318,7 @@ export class Game extends Scene {
                 bg.setOrigin(0.5);
                 bg.setDisplaySize(cellSize, cellSize);
                 bg.setAlpha(0.8);
-                bg.setDepth(1);
+                bg.setDepth(3);
 
                 if (cell.type === "box") {
                     const strength = cell.strength ?? 2;
@@ -3409,7 +3416,7 @@ export class Game extends Scene {
         movesIcon.setOrigin(0.5);
 
         this.movesText = this.add.text(10 * dpr, 0, "", {
-            font: `800 ${24 * dpr}px Roboto`,
+            font: `700 ${24 * dpr}px Roboto`,
             color: "#0095ff",
         });
         this.movesText.setOrigin(0.5);
@@ -3455,7 +3462,7 @@ export class Game extends Scene {
         scoreIcon.setDisplaySize(32 * dpr, 32 * dpr);
 
         this.scoreText = this.add.text(20 * dpr, 0, `${this.score}`, {
-            font: `800 ${24 * dpr}px Roboto`,
+            font: `700 ${24 * dpr}px Roboto`,
             color: "#0095ff",
         });
         this.scoreText.setOrigin(0.5);

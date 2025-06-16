@@ -16,7 +16,7 @@ export class Tasks extends Scene {
         const centerY = this.cameras.main.centerY;
 
         const title = this.add.text(centerX, 20*dpr, "Задания", {
-            font: `800 ${24*dpr}px Roboto`,
+            font: `700 ${24*dpr}px Roboto`,
             color: "#000000",
         });
 
@@ -24,7 +24,7 @@ export class Tasks extends Scene {
         title.setResolution(dpr);
 
         const back = this.add.text(centerX, 50*dpr, "Назад", {
-             font: `800 ${24*dpr}px Roboto`,
+             font: `700 ${24*dpr}px Roboto`,
             color: "#B00000",
         });
         back.setOrigin(0.5);
