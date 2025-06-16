@@ -35,6 +35,7 @@ export class Game extends Scene {
             icon: Phaser.GameObjects.Sprite;
             text: Phaser.GameObjects.Text;
             circle: Phaser.GameObjects.Image;
+            container: Phaser.GameObjects.Container;
             target: number;
             current: number;
         };
@@ -879,9 +880,15 @@ export class Game extends Scene {
             );
             clone.setDisplaySize(size, size);
             clone.setDepth(1000);
+            if (!goal) return;
 
-            const targetX = goal.icon.x;
-            const targetY = goal.icon.y;
+            const { container } = goal;
+            const worldPos = container
+                .getWorldTransformMatrix()
+                .transformPoint(0, 0);
+
+            const targetX = worldPos.x;
+            const targetY = worldPos.y;
 
             this.spawnTileParticles(tile.x, tile.y, type);
 
@@ -1287,7 +1294,7 @@ export class Game extends Scene {
             sprite = this.createDoubleRocketHorizontal(posX, posY);
         } else if (type === "discoball") {
             const from = this.cellSize;
-            const to = this.cellSize - 10 * dpr;
+            const to = this.cellSize - 5 * dpr;
 
             sprite = this.add.sprite(posX, posY, type);
             sprite.setOrigin(0.5);
@@ -2511,36 +2518,27 @@ export class Game extends Scene {
         return Math.min(1, availableWidth / fieldWidth); // scale не больше 1
     }
     updateMovesUI() {
-        this.movesText.setText(
-            `${this.remainingMoves}/${this.levelConfig.moves}`
-        );
+        this.movesText.setText(`${this.remainingMoves}`);
     }
 
     updateScore() {
         this.scoreText.setText(`${this.score}`);
     }
     createGoalsPanel(goals: LevelGoal[]) {
-        const panelY = this.offsetY - 40 * dpr;
+        const panelY = this.offsetY - 60 * dpr;
         const centerX = this.cameras.main.centerX;
 
-        const panelWidth =
-            this.cellSize * goals.length + this.gap + this.cellSize / 2;
-        const panelHeight = 50 * dpr;
-        const cornerRadius = 16;
-
+        const iconSpacing = 55 * dpr;
+        const panelWidth = iconSpacing * goals.length;
+        const panelHeight = 58 * dpr;
+        const cornerRadius = 16 * dpr;
         const bgKey = `goalsPanelBg_${goals.length}`;
 
+        // Генерация фоновой текстуры панели, если ещё не создана
         if (!this.textures.exists(bgKey)) {
             const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-            graphics.fillStyle(0x4299ff, 0.2);
+            graphics.fillStyle(0x3e140b, 1);
             graphics.fillRoundedRect(
-                0,
-                0,
-                panelWidth,
-                panelHeight,
-                cornerRadius
-            );
-            graphics.strokeRoundedRect(
                 0,
                 0,
                 panelWidth,
@@ -2551,11 +2549,12 @@ export class Game extends Scene {
             graphics.destroy();
         }
 
+        // Добавляем фон панели позади всего
         const background = this.add.image(centerX, panelY, bgKey);
         background.setOrigin(0.5);
-        background.setDepth(10);
+        background.setDepth(10); // ниже всех целей
 
-        const iconSpacing = 50 * dpr;
+        // Создание целей
         const totalWidth = (goals.length - 1) * iconSpacing;
         const startX = centerX - totalWidth / 2;
 
@@ -2564,43 +2563,53 @@ export class Game extends Scene {
         goals.forEach((goal, index) => {
             const iconX = startX + index * iconSpacing;
 
-            const icon = this.add.sprite(iconX, panelY, goal.type);
-            icon.setDisplaySize(42 * dpr, 42 * dpr);
+            const container = this.add.container(iconX, panelY);
+            container.setDepth(11);
+
+            const boxBg = this.add.image(0, 0, "tile_bg");
+            boxBg.setDisplaySize(48 * dpr, 48 * dpr);
+            boxBg.setOrigin(0.5);
+
+            const icon = this.add.sprite(0, 0, goal.type);
+            icon.setDisplaySize(
+                this.cellSize - 5 * dpr,
+                this.cellSize - 5 * dpr
+            );
             icon.setOrigin(0.5);
-            icon.setDepth(11);
 
-            const circle = this.add.graphics();
-            const radius = 12 * dpr;
-            const circleX = iconX + 12 * dpr;
-            const circleY = panelY + 10 * dpr;
-
-            circle.fillStyle(0xffffff, 1);
-            circle.fillCircle(radius, radius, radius);
-            circle.setPosition(circleX - radius, circleY - radius);
-            circle.setDepth(12);
+            const radius = 10 * dpr;
+            const circleBg = this.add.graphics();
+            circleBg.fillStyle(0xe8d1ae, 1);
+            circleBg.fillCircle(radius, radius, radius);
+            circleBg.setPosition(8 * dpr, -28 * dpr);
+            circleBg.setDepth(12);
 
             const text = this.add.text(
-                circleX,
-                circleY,
+                18 * dpr,
+                -18 * dpr,
                 goal.count.toString(),
                 {
                     font: `700 ${14 * dpr}px Roboto`,
-                    color: "#4299FF",
+                    color: "#653E28",
                 }
             );
             text.setOrigin(0.5);
             text.setDepth(13);
             text.setResolution(dpr < 2 ? 2 : dpr);
 
+            container.add([boxBg, icon, circleBg, text]);
+
             this.goalIcons[goal.type] = {
                 icon,
-                circle,
+                circle: circleBg,
                 text,
+                container, // добавь container — пригодится для полёта
                 target: goal.count,
                 current: 0,
             };
         });
     }
+
     async updateGoalProgress(type: string) {
         const goal = this.goalIcons?.[type];
         if (!goal) return;
@@ -3292,14 +3301,22 @@ export class Game extends Scene {
 
         this.grid = [];
 
-        const filedBg = this.add.image(
-            this.offsetX + 3*(cellSize + gap) + cellSize/2,
-            this.offsetY +  3*(cellSize + gap) + cellSize / 2,
+        const fieldBg = this.add.image(
+            this.offsetX + 3 * (cellSize + gap) + cellSize / 2,
+            this.offsetY + 3 * (cellSize + gap) + cellSize / 2,
             "field_bg"
         );
-        filedBg.setOrigin(0.5);
-        filedBg.setAlpha(0.8);
-        filedBg.setDisplaySize(gridWidth, gridHeight);
+        fieldBg.setOrigin(0.5);
+        fieldBg.setAlpha(0.8);
+        fieldBg.setDisplaySize(gridWidth + 10 * dpr, gridHeight + 10 * dpr);
+        fieldBg.setDepth(2);
+
+        const bg = this.add.image(0, 0, "background").setOrigin(0.5, 0.5);
+        bg.setPosition(this.cameras.main.centerX, this.cameras.main.centerY);
+        const scaleY = this.cameras.main.height / bg.height;
+        bg.setScale(scaleY);
+        bg.setScrollFactor(0);
+        bg.setDepth(1);
 
         levelGrid.forEach((row, y) => {
             this.grid[y] = [];
@@ -3326,7 +3343,7 @@ export class Game extends Scene {
 
                     const box = this.add.sprite(posX, posY, texture);
                     box.setOrigin(0.5);
-                    box.setDisplaySize(cellSize, cellSize);
+                    box.setDisplaySize(cellSize - 5 * dpr, cellSize - 5 * dpr);
                     box.setInteractive();
                     box.setDepth(8);
 
@@ -3374,7 +3391,10 @@ export class Game extends Scene {
                 } else if (data.isHelper && data.helperType === "discoball") {
                     sprite = this.add.sprite(posX, posY, type);
                     sprite.setOrigin(0.5);
-                    sprite.setDisplaySize(cellSize - 10, cellSize - 10);
+                    sprite.setDisplaySize(
+                        cellSize - 5 * dpr,
+                        cellSize - 5 * dpr
+                    );
                     sprite.setInteractive();
                     sprite.setDepth(5);
                 } else {
@@ -3406,29 +3426,39 @@ export class Game extends Scene {
         });
 
         this.movesContainer = this.add.container(
-            this.cameras.main.centerX,
-            this.offsetY - 104 * dpr
+            this.offsetX + gridWidth / 2 + 30 * dpr,
+            this.offsetY - 154 * dpr
         );
         this.movesContainer.setDepth(100);
 
-        const movesIcon = this.add.image(-30 * dpr, 0, "moves_icon");
-        movesIcon.setDisplaySize(24 * dpr, 24 * dpr);
+        const movesIcon = this.add.text(-10 * dpr, 0, "Ходы:", {
+            font: `700 ${18 * dpr}px Roboto`,
+            color: "#653E28",
+        });
         movesIcon.setOrigin(0.5);
+        movesIcon.setResolution(dpr < 2 ? 2 : dpr);
+        movesIcon.setDepth(101);
 
-        this.movesText = this.add.text(10 * dpr, 0, "", {
-            font: `700 ${24 * dpr}px Roboto`,
-            color: "#0095ff",
+        this.movesText = this.add.text(30 * dpr, 0, "", {
+            font: `700 ${18 * dpr}px Roboto`,
+            color: "#653E28",
         });
         this.movesText.setOrigin(0.5);
         this.movesText.setResolution(dpr < 2 ? 2 : dpr);
+        this.movesText.setDepth(101);
 
-        this.movesContainer.add([movesIcon, this.movesText]);
+        const movesBg = this.add.image(0, 0, "moves_bg");
+        movesBg.setOrigin(0.5);
+        movesBg.setScale(0.357*dpr);
+        movesBg.setDepth(100);
+
+        this.movesContainer.add([movesBg, movesIcon, this.movesText]);
 
         this.updateMovesUI();
 
         this.pauseButton = this.add.image(
-            this.offsetX + cellSize * cols - 10 * dpr,
-            this.offsetY - 104 * dpr,
+            this.offsetX + cellSize * cols - cellSize / 2,
+            this.offsetY - 154 * dpr,
             "pause_btn"
         );
         this.pauseButton.setOrigin(0.5);
@@ -3452,23 +3482,30 @@ export class Game extends Scene {
         });
 
         this.scoreContainer = this.add.container(
-            this.offsetX + cellSize / 2,
-            this.offsetY - 104 * dpr
+            this.offsetX + cellSize + cellSize / 2,
+            this.offsetY - 154 * dpr
         );
         this.scoreContainer.setDepth(100);
 
-        const scoreIcon = this.add.image(-20 * dpr, 0, "score_icon");
+        const scoreIcon = this.add.image(20 * dpr, 0, "score_icon");
         scoreIcon.setOrigin(0.5);
-        scoreIcon.setDisplaySize(32 * dpr, 32 * dpr);
+        scoreIcon.setDisplaySize(48 * dpr, 48 * dpr);
+        scoreIcon.setDepth(101);
 
-        this.scoreText = this.add.text(20 * dpr, 0, `${this.score}`, {
-            font: `700 ${24 * dpr}px Roboto`,
-            color: "#0095ff",
+        this.scoreText = this.add.text(-20 * dpr, 0, `100`, {
+            font: `700 ${18 * dpr}px Roboto`,
+            color: "#653E28",
         });
         this.scoreText.setOrigin(0.5);
         this.scoreText.setResolution(dpr < 2 ? 2 : dpr);
+        this.scoreText.setDepth(101);
 
-        this.scoreContainer.add([scoreIcon, this.scoreText]);
+        const scoreBg = this.add.image(0, 0, "score_bg");
+        scoreBg.setOrigin(0.5);
+        scoreBg.setScale(0.357*dpr);
+        scoreBg.setDepth(100);
+
+        this.scoreContainer.add([scoreBg, scoreIcon, this.scoreText]);
 
         this.createGoalsPanel(this.levelConfig.goals);
 
