@@ -44,7 +44,6 @@ export class Preloader extends Scene {
         this.load.image("rocket", "images/rocket.png");
         this.load.image("rocketTrail", "images/rocket_trail.png");
         this.load.image("pause_btn", "images/pause_btn.png");
-        this.load.image("moves_icon", "images/moves_icon.png");
         this.load.image("score_icon", "images/score_icon.png");
                 this.load.image("booster_wand", "images/booster_wand.png");
         this.load.image("booster_hammer", "images/booster_hammer.png");
