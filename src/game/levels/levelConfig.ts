@@ -856,7 +856,7 @@ export const levelConfigs: LevelConfig[] = [
         elements: ["energy", "message", "smartphone", "sim"],
         goals: [{ type: "box_full", count: 2 }],
         grid: [
-            // Стандартная 6x6 сетка
+            
             [
                 null,
                 {
@@ -971,11 +971,7 @@ export const levelConfigs: LevelConfig[] = [
                 { type: "box", strength: 2 },
                 { type: "box", strength: 2 },
                 { type: "box", strength: 2 },
-                // {
-                //     type: "horizontalHelper",
-                //     isHelper: true,
-                //     helperType: "horizontalHelper",
-                // },
+
                 {
                     type: "ice",
                     content: {

@@ -16,9 +16,7 @@ export class Preloader extends Scene {
             0x000000
         );
 
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
         this.load.on("progress", (progress: number) => {
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
             bar.width = 4 + 460 * progress;
         });
     }

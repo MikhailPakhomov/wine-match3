@@ -138,71 +138,7 @@ export class Game extends Scene {
 
             const helperType = tile.getData("helperType");
 
-            // if (isHelper) {
-            //     if (this.selectedTileTween) {
-            //         this.tweens.remove(this.selectedTileTween);
-            //         this.selectedTileTween = null;
-            //     }
 
-            //     if (this.selectedTile) {
-            //         const x1 = this.selectedTile.getData("gridX");
-            //         const y1 = this.selectedTile.getData("gridY");
-            //         const x2 = tile.getData("gridX");
-            //         const y2 = tile.getData("gridY");
-
-            //         const dx = Math.abs(x1 - x2);
-            //         const dy = Math.abs(y1 - y2);
-
-            //         if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || this.isGloveActive)  {
-            //             this.selectedTile.setDisplaySize(
-            //                 baseSize - 5 * dpr,
-            //                 baseSize - 5 * dpr
-            //             );
-            //             await this.basicSwap(this.selectedTile, tile);
-
-            //             if (helperType === "discoball") {
-            //                 await this._activateSingleHelper(
-            //                     tile,
-            //                     this.selectedTile,
-            //                     new Set()
-            //                 );
-            //                 this.selectedTile = null;
-
-            //                 return;
-            //             }
-
-            //             await this.activateHelperChain([tile]);
-            //             this.selectedTile = null;
-            //             if (this.isGloveActive) {
-            //                 this.isGloveActive = false;
-            //                 this.decreaseBoosterCount("booster_glove");
-            //                 this.clearActiveBoosterVisual();
-            //             }
-            //             return;
-            //         } else {
-            //             this.selectedTile.setDisplaySize(
-            //                 baseSize - 5 * dpr,
-            //                 baseSize - 5 * dpr
-            //             );
-            //             await this.activateHelperChain([tile]);
-            //             this.selectedTile = null;
-            //             if (this.isGloveActive) {
-            //                 this.isGloveActive = false;
-            //                 this.decreaseBoosterCount("booster_glove");
-            //                 this.clearActiveBoosterVisual();
-            //             }
-            //             return;
-            //         }
-            //     }
-
-            //     await this.activateHelperChain([tile]);
-            //     if (this.isGloveActive) {
-            //         this.isGloveActive = false;
-            //         this.decreaseBoosterCount("booster_glove");
-            //         this.clearActiveBoosterVisual();
-            //     }
-            //     return;
-            // }
 
             if (isHelper) {
                 if (isHelper && !this.isGloveActive) {
@@ -633,7 +569,7 @@ export class Game extends Scene {
             );
         };
 
-        // Горизонтальные
+       
         for (let y = 0; y < height; y++) {
             let streak: Phaser.GameObjects.Sprite[] = [];
             let prevType: string | null = null;
@@ -663,7 +599,7 @@ export class Game extends Scene {
             if (streak.length >= 3) matches.push([...streak]);
         }
 
-        // Вертикальные
+       
         for (let x = 0; x < width; x++) {
             let streak: Phaser.GameObjects.Sprite[] = [];
             let prevType: string | null = null;
@@ -2296,7 +2232,7 @@ export class Game extends Scene {
                 if (!tile || tile.getData("ice") || tile.getData("box"))
                     continue;
 
-                // Свап вправо
+                
                 if (x < cols - 1) {
                     const right = row[x + 1];
                     if (!right || right.getData("ice") || right.getData("box"))
@@ -2313,7 +2249,7 @@ export class Game extends Scene {
                     if (match.length > 0) return true;
                 }
 
-                // Свап вниз
+                
                 if (y < rows - 1 && this.grid[y + 1]) {
                     const down = this.grid[y + 1][x];
                     if (!down || down.getData("ice") || down.getData("box"))
@@ -2444,7 +2380,7 @@ export class Game extends Scene {
         initialSize = 34
     ): Phaser.GameObjects.Container {
         console.log("privet");
-        const height = initialSize * (15 / 34); // сохраняем соотношение
+        const height = initialSize * (15 / 34); 
 
         const rocketLeft = this.add.sprite(-8 * dpr, 0, "rocket");
         rocketLeft.setDisplaySize(initialSize * dpr, height * dpr);
@@ -2477,7 +2413,7 @@ export class Game extends Scene {
         y: number,
         initialSize = 34
     ): Phaser.GameObjects.Container {
-        const height = initialSize * (15 / 34); // сохраняем пропорции
+        const height = initialSize * (15 / 34); 
 
         const rocketTop = this.add.sprite(0, 8 * dpr, "rocket");
         rocketTop.setDisplaySize(initialSize * dpr, height * dpr);
@@ -2533,7 +2469,7 @@ export class Game extends Scene {
         const cornerRadius = 16 * dpr;
         const bgKey = `goalsPanelBg_${goals.length}`;
 
-        // Генерация фоновой текстуры панели, если ещё не создана
+        
         if (!this.textures.exists(bgKey)) {
             const graphics = this.make.graphics({ x: 0, y: 0, add: false });
             graphics.fillStyle(0x3e140b, 1);
@@ -2548,12 +2484,12 @@ export class Game extends Scene {
             graphics.destroy();
         }
 
-        // Добавляем фон панели позади всего
+        
         const background = this.add.image(centerX, panelY, bgKey);
         background.setOrigin(0.5);
-        background.setDepth(10); // ниже всех целей
+        background.setDepth(10); 
 
-        // Создание целей
+        
         const totalWidth = (goals.length - 1) * iconSpacing;
         const startX = centerX - totalWidth / 2;
 
@@ -2602,7 +2538,7 @@ export class Game extends Scene {
                 icon,
                 circle: circleBg,
                 text,
-                container, // добавь container — пригодится для полёта
+                container, 
                 target: goal.count,
                 current: 0,
             };

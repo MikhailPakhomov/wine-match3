@@ -23,7 +23,7 @@ export class SceneRouter {
     static backToMainMenu(currentScene: Phaser.Scene | null) {
         if (!currentScene) return;
 
-        currentScene.scene.stop(); // закрыть текущую
+        currentScene.scene.stop(); 
         currentScene.scene.resume("MainMenu");
         useGameStore.getState().setMainMenuUIVisible(true);
     }
