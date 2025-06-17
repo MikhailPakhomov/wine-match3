@@ -1,9 +1,8 @@
 import { Scene } from "phaser";
-import { bridge } from "../../bridge";
 
+import { useGameStore } from "../../store/useGameStore";
 
 const dpr = window.devicePixelRatio || 1;
-
 
 export class Tavern extends Scene {
     constructor() {
@@ -11,30 +10,30 @@ export class Tavern extends Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor('#ffffff');
+        this.cameras.main.setBackgroundColor("#ffffff");
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
 
-        const title = this.add.text(centerX, 20*dpr, "Таверна", {
-            font: `700 ${24*dpr}px Roboto`,
+        const title = this.add.text(centerX, 20 * dpr, "Таверна", {
+            font: `700 ${24 * dpr}px Roboto`,
             color: "#000000",
         });
 
         title.setOrigin(0.5);
         title.setResolution(dpr);
 
-        const back = this.add.text(centerX, 50*dpr, "Назад", {
-             font: `700 ${24*dpr}px Roboto`,
+        const back = this.add.text(centerX, 50 * dpr, "Назад", {
+            font: `700 ${24 * dpr}px Roboto`,
             color: "#B00000",
         });
         back.setOrigin(0.5);
         back.setInteractive();
 
         back.on("pointerdown", () => {
-            this.scene.stop(); // закрываем помощь
-            this.scene.resume("MainMenu"); // продолжаем главное меню
-            bridge.triggerMainMenuUIVisible(true); // показываем UI
+            this.scene.stop();
+            this.scene.resume("MainMenu");
+            useGameStore.getState().setMainMenuUIVisible(true);
         });
     }
 }

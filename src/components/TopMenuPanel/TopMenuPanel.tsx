@@ -7,18 +7,14 @@ import CoinsTopBarIcon from "../ui/icons/CoinsTopBarIcon";
 import AttemptsTopBarIcon from "../ui/icons/AttemptsTopBarIcon";
 import IncreaseAttmptsTopBarIcon from "../ui/icons/IncreaseAttmptsTopBarIcon";
 import { useGameStore } from "../../store/useGameStore";
-import { bridge } from "../../bridge";
+
 import { navigateToScene } from "../../game/utils/navigateToScene";
 
 const TopMenuPanel = () => {
     const scoreCount = useGameStore((state) => state.scoreCount);
-    const setScore = useGameStore((state) => state.setScore);
 
-    useEffect(() => {
-        bridge.setOnScoreUpdate((score) => {
-            setScore(score);
-        });
-    }, [setScore]);
+
+
 
     return (
         <div className={styles.container}>

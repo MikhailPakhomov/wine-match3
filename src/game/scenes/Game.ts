@@ -1,8 +1,7 @@
-import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { delayPromise, tweenPromise } from "../utils/tween-utils";
 import { LevelConfig, LevelGoal } from "../levels/levelConfig";
-import { bridge } from "../../bridge";
+import { useGameStore } from "../../store/useGameStore";
 
 const dpr = window.devicePixelRatio || 1;
 export class Game extends Scene {
@@ -2650,7 +2649,7 @@ export class Game extends Scene {
     handleLevelWin() {
         if (this.levelCompleted) return;
         this.levelCompleted = true;
-        bridge.triggerScoreUpdate(this.score);
+        useGameStore.getState().setScore(this.score);
         this.scene.stop("Game");
         this.scene.start("MainMenu");
         // this.scene.start("WinScene", {
@@ -3476,7 +3475,8 @@ export class Game extends Scene {
             // });
             // this.scene.pause("Game");
 
-            bridge.triggerScoreUpdate(this.score);
+           useGameStore.getState().setScore(this.score);
+            
             this.scene.stop("Game");
             this.scene.start("MainMenu");
         });

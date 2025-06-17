@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
-import { bridge } from "../../bridge";
+
+import { useGameStore } from "../../store/useGameStore";
 
 const dpr = window.devicePixelRatio || 1;
 
@@ -30,9 +31,9 @@ export class Help extends Scene {
         back.setInteractive();
 
         back.on("pointerdown", () => {
-            this.scene.stop(); // закрываем помощь
-            this.scene.resume("MainMenu"); // продолжаем главное меню
-            bridge.triggerMainMenuUIVisible(true); // показываем UI
+            this.scene.stop(); 
+            this.scene.resume("MainMenu"); 
+            useGameStore.getState().setMainMenuUIVisible(true);
         });
     }
 }

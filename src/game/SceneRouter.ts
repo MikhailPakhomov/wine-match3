@@ -1,4 +1,4 @@
-import { bridge } from "../bridge";
+import { useGameStore } from "../store/useGameStore";
 
 export class SceneRouter {
     static goToScene(
@@ -16,7 +16,7 @@ export class SceneRouter {
         currentScene.scene.launch(targetSceneKey);
 
         if (hideUI) {
-            bridge.triggerMainMenuUIVisible(false);
+            useGameStore.getState().setMainMenuUIVisible(false);
         }
     }
 
@@ -25,6 +25,6 @@ export class SceneRouter {
 
         currentScene.scene.stop(); // закрыть текущую
         currentScene.scene.resume("MainMenu");
-        bridge.triggerMainMenuUIVisible(true);
+        useGameStore.getState().setMainMenuUIVisible(true);
     }
 }

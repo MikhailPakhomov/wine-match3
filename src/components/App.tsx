@@ -4,9 +4,9 @@ import { MainMenu } from "../game/scenes/MainMenu";
 import TopMenuPanel from "./TopMenuPanel/TopMenuPanel";
 import PlayButton from "./ui/PlayButton/PlayButton";
 import BottomMenuPanel from "./BottomMenuPanel/BottomMenuPanel";
-import { EventBus } from "../game/EventBus";
+
 import { useGameStore } from "../store/useGameStore";
-import { bridge } from "../bridge";
+
 
 function App() {
     const showMainMenuUI = useGameStore((s) => s.showMainMenuUI);
@@ -16,7 +16,7 @@ function App() {
     const startLevel = () => {
         const scene = useGameStore.getState().currentScene;
         if (scene && scene instanceof MainMenu) {
-            bridge.triggerStartLevel();
+            useGameStore.getState().setMainMenuUIVisible(false);
             scene.startLevel();
         }
     };

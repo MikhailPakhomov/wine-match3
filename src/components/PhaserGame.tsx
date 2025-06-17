@@ -1,7 +1,7 @@
 import { forwardRef, useLayoutEffect, useRef, useEffect } from "react";
 import StartGame from "../game/main";
-import { useGameStore } from "../store/useGameStore";
-import { bridge } from "../bridge";
+
+
 
 export interface IRefPhaserGame {
   game: Phaser.Game | null;
@@ -30,22 +30,6 @@ export const PhaserGame = forwardRef<IRefPhaserGame, {}>(function PhaserGame(_, 
     };
   }, [ref]);
 
-
-useEffect(() => {
-  bridge.setOnGameLoaded((scene) => {
-    useGameStore.getState().setLoaded(true);
-    useGameStore.getState().setScene(scene);
-    useGameStore.getState().setMainMenuUIVisible(true);
-  });
-
-  bridge.setOnStartLevel(() => {
-    useGameStore.getState().setMainMenuUIVisible(false);
-  });
-
-    bridge.setOnMainMenuUIVisible((visible) => {
-    useGameStore.getState().setMainMenuUIVisible(visible);
-  });
-}, []);
 
   return <div className="game-container" id="game-container"></div>;
 });

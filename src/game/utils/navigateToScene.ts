@@ -1,4 +1,4 @@
-import { bridge } from "../../bridge";
+
 import { useGameStore } from "../../store/useGameStore";
 
 export function navigateToScene(
@@ -11,5 +11,5 @@ export function navigateToScene(
 
     scene.scene.launch(to);
     scene.scene.pause(from);
-    if (hideUI) bridge.triggerMainMenuUIVisible(false);
+    if (hideUI) useGameStore.getState().setMainMenuUIVisible(false);
 }

@@ -1,5 +1,4 @@
-import { bridge } from "../../bridge";
-import { EventBus } from "./../EventBus";
+import { useGameStore } from "../../store/useGameStore";
 import { Scene } from "phaser";
 
 const dpr = window.devicePixelRatio || 1;
@@ -45,13 +44,14 @@ export class Preloader extends Scene {
         this.load.image("rocketTrail", "images/rocket_trail.png");
         this.load.image("pause_btn", "images/pause_btn.png");
         this.load.image("score_icon", "images/score_icon.png");
-                this.load.image("booster_wand", "images/booster_wand.png");
+        this.load.image("booster_wand", "images/booster_wand.png");
         this.load.image("booster_hammer", "images/booster_hammer.png");
         this.load.image("booster_glove", "images/booster_glove.png");
     }
 
     create() {
         this.scene.start("MainMenu");
-        bridge.triggerGameLoaded(this);
+        useGameStore.getState().setScene(this);
+        useGameStore.getState().setLoaded(true);
     }
 }

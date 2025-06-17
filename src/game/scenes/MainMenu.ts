@@ -1,8 +1,7 @@
+import { useGameStore } from "./../../store/useGameStore";
 import { GameObjects, Scene } from "phaser";
 import { LevelConfig, levelConfigs } from "../levels/levelConfig";
 
-import { EventBus } from "../EventBus";
-import { bridge } from "../../bridge";
 
 const dpr = window.devicePixelRatio || 1;
 export class MainMenu extends Scene {
@@ -16,7 +15,7 @@ export class MainMenu extends Scene {
     }
 
     startLevel(config?: LevelConfig) {
-        bridge.triggerStartLevel();
+        useGameStore.getState().setMainMenuUIVisible(false);
 
         this.scene.start("Game", {
             config: levelConfigs[12],
@@ -49,6 +48,8 @@ export class MainMenu extends Scene {
         book.setOrigin(0.5);
         book.setInteractive();
 
-        bridge.triggerGameLoaded(this);
+        useGameStore.getState().setScene(this);
+        useGameStore.getState().setLoaded(true);
+        useGameStore.getState().setMainMenuUIVisible(true);
     }
 }
