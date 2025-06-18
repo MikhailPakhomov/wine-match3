@@ -4,7 +4,7 @@ const RaitingMenuIcon = () => {
         <img
             src="assets/images/navbar/RaitingMenuIcon.png"
             alt="Раздел рейтингов"
-            width={48}
+            width={58}
         />
     );
 };

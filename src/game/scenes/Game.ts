@@ -1,7 +1,8 @@
 import { Scene } from "phaser";
 import { delayPromise, tweenPromise } from "../utils/tween-utils";
 import { LevelConfig, LevelGoal } from "../levels/levelConfig";
-import { useGameStore } from "../../store/useGameStore";
+import { useGameStore, Booster } from "../../store/useGameStore";
+import { use } from "matter";
 
 const dpr = window.devicePixelRatio || 1;
 export class Game extends Scene {
@@ -19,6 +20,9 @@ export class Game extends Scene {
     scoreText: Phaser.GameObjects.Text;
     movesText: Phaser.GameObjects.Text;
     movesBg: Phaser.GameObjects.Image;
+    unsubscribeMoves: () => void = () => {};
+    unsubscribeGoals: () => void = () => {};
+    unsubscribeBoosters: () => void = () => {};
     pauseButton!: Phaser.GameObjects.Image;
 
     selectedTile: Phaser.GameObjects.Sprite | null = null;
@@ -138,8 +142,6 @@ export class Game extends Scene {
 
             const helperType = tile.getData("helperType");
 
-
-
             if (isHelper) {
                 if (isHelper && !this.isGloveActive) {
                     if (helperType === "discoball" && this.selectedTile) {
@@ -192,7 +194,10 @@ export class Game extends Scene {
 
                     if (this.isGloveActive) {
                         this.isGloveActive = false;
-                        this.decreaseBoosterCount("booster_glove");
+                        // this.decreaseBoosterCount("booster_glove");
+                        useGameStore
+                            .getState()
+                            .decreaseBoosterCount("booster_glove");
                         this.clearActiveBoosterVisual();
                     }
 
@@ -402,8 +407,7 @@ export class Game extends Scene {
 
         const matches = this.findMatches?.();
         if (matches && matches.length > 0) {
-            this.remainingMoves--;
-            this.updateMovesUI();
+            useGameStore.getState().decreaseMoves();
             this.checkWin();
 
             this.removeMatches(matches);
@@ -441,7 +445,6 @@ export class Game extends Scene {
             await delayPromise(this, 100);
             await this.fillEmptyTiles();
             await this.processMatchesLoop();
-
             await this.reshuffleBoardIfNoMoves();
         } else {
             if (!this.isGloveActive) {
@@ -451,7 +454,8 @@ export class Game extends Scene {
         if (this.isGloveActive) {
             console.log(555);
             this.isGloveActive = false;
-            this.decreaseBoosterCount("booster_glove");
+            // this.decreaseBoosterCount("booster_glove");
+            useGameStore.getState().decreaseBoosterCount("booster_glove");
             this.clearActiveBoosterVisual();
         }
         this.isProcessing = false;
@@ -461,7 +465,6 @@ export class Game extends Scene {
         tileA: Phaser.GameObjects.Sprite,
         tileB: Phaser.GameObjects.Sprite
     ) {
-        console.log(666);
         if (this.isProcessing) return;
         this.isProcessing = true;
 
@@ -486,7 +489,8 @@ export class Game extends Scene {
             await this._activateSingleHelper(tileA, tileB, new Set());
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -497,7 +501,8 @@ export class Game extends Scene {
             await this._activateSingleHelper(tileB, tileA, new Set());
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -508,7 +513,8 @@ export class Game extends Scene {
             await this.processMatchesLoop();
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -518,7 +524,8 @@ export class Game extends Scene {
             await this.activateHelperChain([tileA, tileB]);
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -529,7 +536,8 @@ export class Game extends Scene {
             await this.activateHelperChain([tileA]);
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -540,7 +548,8 @@ export class Game extends Scene {
             await this.activateHelperChain([tileB]);
             if (this.isGloveActive) {
                 this.isGloveActive = false;
-                this.decreaseBoosterCount("booster_glove");
+                // this.decreaseBoosterCount("booster_glove");
+                useGameStore.getState().decreaseBoosterCount("booster_glove");
                 this.clearActiveBoosterVisual();
             }
             return;
@@ -569,7 +578,6 @@ export class Game extends Scene {
             );
         };
 
-       
         for (let y = 0; y < height; y++) {
             let streak: Phaser.GameObjects.Sprite[] = [];
             let prevType: string | null = null;
@@ -599,7 +607,6 @@ export class Game extends Scene {
             if (streak.length >= 3) matches.push([...streak]);
         }
 
-       
         for (let x = 0; x < width; x++) {
             let streak: Phaser.GameObjects.Sprite[] = [];
             let prevType: string | null = null;
@@ -717,6 +724,7 @@ export class Game extends Scene {
                                 tweens,
                                 tilesToDestroyLater
                             );
+                            this.updateGoalProgress(sprite.getData("type"));
 
                             tweens.push(
                                 tweenPromise(this, {
@@ -775,6 +783,7 @@ export class Game extends Scene {
                     tweens,
                     tilesToDestroyLater
                 );
+                this.updateGoalProgress(tile.getData("type"));
             }
         }
 
@@ -837,8 +846,9 @@ export class Game extends Scene {
                     duration: 400,
                     ease: "Cubic.easeIn",
                     onComplete: () => {
-                        this.updateGoalProgress(goalType);
-                        this.checkWin();
+                        // useGameStore.getState().updateGoal(goalType, 1);
+                        // this.updateGoalProgress(goalType);
+                        // this.checkWin();
                         clone.destroy();
 
                         if (this.grid?.[y]?.[x] === tile) {
@@ -880,8 +890,9 @@ export class Game extends Scene {
                     duration: 300,
                     ease: "Power1",
                     onComplete: () => {
-                        this.updateGoalProgress(goalType);
-                        this.checkWin();
+                        // useGameStore.getState().updateGoal(goalType, 1);
+                        // this.updateGoalProgress(goalType);
+                        // this.checkWin();
 
                         if (this.grid?.[y]?.[x] === tile) {
                             this.grid[y][x] = null;
@@ -1340,10 +1351,9 @@ export class Game extends Scene {
         tile?: Phaser.GameObjects.Sprite,
         triggerChain?: Set<Phaser.GameObjects.Sprite>
     ): Promise<void> {
-        if (this.remainingMoves >= 0) {
+        if (useGameStore.getState().remainingMoves >= 0) {
             if (!this.isGloveActive) {
-                this.remainingMoves--;
-                this.updateMovesUI();
+                useGameStore.getState().decreaseMoves();
             }
         }
 
@@ -1433,7 +1443,8 @@ export class Game extends Scene {
                         },
                         onComplete: () => {
                             this.updateGoalProgress(
-                                tile.getData("type") + "_full"
+                                "box_full"
+                                // tile.getData("type") + "_full"
                             );
                             this.checkWin();
                             tile.destroy();
@@ -1645,6 +1656,7 @@ export class Game extends Scene {
                                     tweens,
                                     tilesToDestroyLater
                                 );
+                                this.updateGoalProgress(tile.getData("type"));
                                 this.score += 1;
                                 this.updateScore();
                             } else {
@@ -1825,6 +1837,7 @@ export class Game extends Scene {
                                     tweens,
                                     tilesToDestroyLater
                                 );
+                                this.updateGoalProgress(tile.getData("type"));
                                 this.score += 1;
                                 this.updateScore();
                             } else {
@@ -2063,7 +2076,8 @@ export class Game extends Scene {
                         },
                         onComplete: () => {
                             this.updateGoalProgress(
-                                sprite.getData("type") + "_full"
+                                "box_full"
+                                // sprite.getData("type") + "_full"
                             );
                             this.checkWin();
                             sprite.destroy();
@@ -2140,7 +2154,9 @@ export class Game extends Scene {
                 [],
                 true
             );
+            this.updateGoalProgress(tile.getData("type"));
         });
+
         // this.sound.play("remove_tile");
         this.grid[centerY][centerX] = null;
 
@@ -2232,7 +2248,6 @@ export class Game extends Scene {
                 if (!tile || tile.getData("ice") || tile.getData("box"))
                     continue;
 
-                
                 if (x < cols - 1) {
                     const right = row[x + 1];
                     if (!right || right.getData("ice") || right.getData("box"))
@@ -2249,7 +2264,6 @@ export class Game extends Scene {
                     if (match.length > 0) return true;
                 }
 
-                
                 if (y < rows - 1 && this.grid[y + 1]) {
                     const down = this.grid[y + 1][x];
                     if (!down || down.getData("ice") || down.getData("box"))
@@ -2380,7 +2394,7 @@ export class Game extends Scene {
         initialSize = 34
     ): Phaser.GameObjects.Container {
         console.log("privet");
-        const height = initialSize * (15 / 34); 
+        const height = initialSize * (15 / 34);
 
         const rocketLeft = this.add.sprite(-8 * dpr, 0, "rocket");
         rocketLeft.setDisplaySize(initialSize * dpr, height * dpr);
@@ -2413,7 +2427,7 @@ export class Game extends Scene {
         y: number,
         initialSize = 34
     ): Phaser.GameObjects.Container {
-        const height = initialSize * (15 / 34); 
+        const height = initialSize * (15 / 34);
 
         const rocketTop = this.add.sprite(0, 8 * dpr, "rocket");
         rocketTop.setDisplaySize(initialSize * dpr, height * dpr);
@@ -2452,9 +2466,10 @@ export class Game extends Scene {
 
         return Math.min(1, availableWidth / fieldWidth); // scale не больше 1
     }
-    updateMovesUI() {
-        this.movesText.setText(`${this.remainingMoves}`);
-    }
+    // updateMovesUI() {
+    //     const moves = useGameStore.getState().remainingMoves;
+    //     this.movesText.setText(`${moves}`);
+    // }
 
     updateScore() {
         this.scoreText.setText(`${this.score}`);
@@ -2469,7 +2484,6 @@ export class Game extends Scene {
         const cornerRadius = 16 * dpr;
         const bgKey = `goalsPanelBg_${goals.length}`;
 
-        
         if (!this.textures.exists(bgKey)) {
             const graphics = this.make.graphics({ x: 0, y: 0, add: false });
             graphics.fillStyle(0x3e140b, 1);
@@ -2484,12 +2498,10 @@ export class Game extends Scene {
             graphics.destroy();
         }
 
-        
         const background = this.add.image(centerX, panelY, bgKey);
         background.setOrigin(0.5);
-        background.setDepth(10); 
+        background.setDepth(10);
 
-        
         const totalWidth = (goals.length - 1) * iconSpacing;
         const startX = centerX - totalWidth / 2;
 
@@ -2532,27 +2544,32 @@ export class Game extends Scene {
             text.setDepth(13);
             text.setResolution(dpr < 2 ? 2 : dpr);
 
+            this.unsubscribeGoals = useGameStore.subscribe(
+                (state) =>
+                    state.goalsProgress.find((g) => g.type === goal.type)
+                        ?.count ?? 0,
+                (newCount) => {
+                    if (!text || !text.scene || !text.setText) return;
+                    text.setText(`${newCount}`);
+                }
+            );
             container.add([boxBg, icon, circleBg, text]);
 
             this.goalIcons[goal.type] = {
                 icon,
                 circle: circleBg,
                 text,
-                container, 
-                target: goal.count,
-                current: 0,
+                container,
             };
         });
     }
 
     async updateGoalProgress(type: string) {
+        console.log(type);
         const goal = this.goalIcons?.[type];
         if (!goal) return;
 
-        goal.current++;
-
-        const remaining = Math.max(0, goal.target - goal.current);
-        goal.text.setText(remaining.toString());
+        useGameStore.getState().updateGoal(type, 1);
 
         this.tweens.killTweensOf(goal.circle);
         this.tweens.killTweensOf(goal.text);
@@ -2576,10 +2593,11 @@ export class Game extends Scene {
             ease: "Quad.easeInOut",
         });
     }
+
     checkGoalsCompleted(): boolean {
-        return Object.values(this.goalIcons).every(
-            (goal) => goal.current >= goal.target
-        );
+        return useGameStore
+            .getState()
+            .goalsProgress.every((goal) => goal.count === 0);
     }
 
     handleLevelWin() {
@@ -2597,7 +2615,7 @@ export class Game extends Scene {
         this.scene.start("LoseScene", { config: this.levelConfig });
     }
     async checkWin() {
-        if (this.remainingMoves > 0) {
+        if (useGameStore.getState().remainingMoves > 0) {
             if (this.checkGoalsCompleted()) {
                 await this.playRemainingMovesBonus();
                 this.handleLevelWin();
@@ -2629,11 +2647,10 @@ export class Game extends Scene {
     }
 
     async playRemainingMovesBonus() {
-        while (this.remainingMoves > 0) {
-            this.remainingMoves--;
+        while (useGameStore.getState().remainingMoves > 0) {
+            useGameStore.getState().decreaseMoves();
             this.score += 5;
             this.updateScore();
-            this.updateMovesUI();
 
             await this.delay(1000);
         }
@@ -2644,9 +2661,22 @@ export class Game extends Scene {
     }
 
     createBoostersPanel() {
+        interface BageContent {
+            bg: string;
+            text: string;
+            textColor: string;
+        }
+
+        const getBageContent = (booster: Booster): BageContent => {
+            const bg = booster.count > 0 ? "boosterCount_bg" : "boosterBuy_btn";
+            const text = booster.count > 0 ? String(booster.count) : "+";
+            const textColor = booster.count > 0 ? "#653E28" : "#FFFFFF";
+            return { bg, text, textColor };
+        };
+
         this.boosterContainers = {};
 
-        const boosterData = this.levelConfig.boosters;
+        const boosterData = useGameStore.getState().profile.boosters;
 
         const spacing = 90 * dpr;
         const totalWidth = spacing * boosterData.length;
@@ -2656,44 +2686,80 @@ export class Game extends Scene {
             this.cameras.main.centerY +
             (this.rows * this.cellSize) / 2 +
             spacing / 2 +
-            20 * dpr;
+            40 * dpr;
 
         boosterData.forEach((booster, index) => {
+            const bageContent: BageContent = getBageContent(booster);
+
             const x = startX + index * spacing;
 
             const container = this.add.container(x, y);
             container.setDepth(100);
 
-            const icon = this.add.image(0, 0, booster.key);
+            const icon = this.add.image(0, 0, booster.type);
             icon.setOrigin(0.5);
-            icon.setScale(0.333 * dpr);
+            icon.setScale(0.357 * dpr);
             icon.setInteractive({ useHandCursor: true });
+            icon.setDepth(101);
 
-            const badgeBg = this.add.circle(
-                20 * dpr,
-                20 * dpr,
-                12 * dpr,
-                0x4299ff
-            );
+            const badgeBg = this.add.image(20 * dpr, 20 * dpr, bageContent.bg);
+            badgeBg.setScale(0.357 * dpr);
+            badgeBg.setOrigin(0.5);
+            badgeBg.setDepth(102);
+
             const badgeText = this.add.text(
                 20 * dpr,
                 20 * dpr,
-                `${booster.count}`,
+                bageContent.text,
                 {
                     font: `700 ${16 * dpr}px Roboto`,
-                    color: "#ffffff",
+                    color: bageContent.textColor,
                 }
             );
             badgeText.setOrigin(0.5);
             badgeText.setName("badgeText");
             badgeText.setResolution(dpr < 2 ? 2 : dpr);
+            badgeText.setDepth(103);
+            this.unsubscribeBoosters = useGameStore.subscribe(
+                (state) =>
+                    state.profile.boosters.find((b) => b.type === booster.type)
+                        ?.count ?? 0,
+                (newCount) => {
+                    console.log(newCount);
+                    if (!badgeText || !badgeText.scene || !badgeText.setText)
+                        return;
+                    if (newCount > 0) {
+                        badgeText.setText(`${newCount}`);
+                        badgeText.setColor("#653E28");
+                        badgeBg.setTexture("boosterCount_bg");
+                    } else {
+                        badgeText.setText(`+`);
+                        badgeText.setColor("#FFFFFF");
+                        badgeBg.setTexture("boosterBuy_btn");
+                    }
+                }
+            );
 
-            container.add([icon, badgeBg, badgeText]);
-            this.boosterContainers[booster.key] = container;
+            const boosterBg = this.add.image(0, 0, "booster_bg");
+            boosterBg.setOrigin(0.5);
+            boosterBg.setDepth(100);
+            boosterBg.setScale(0.357 * dpr);
 
-            if (booster.key === "booster_wand") {
+            container.add([boosterBg, icon, badgeBg, badgeText]);
+            this.boosterContainers[booster.type] = container;
+
+            if (booster.type === "booster_wand") {
                 icon.on("pointerdown", () => {
-                    if (booster.count <= 0) return;
+                    const boosterCount =
+                        useGameStore
+                            .getState()
+                            .profile.boosters.find(
+                                (b) => b.type === booster.type
+                            )?.count ?? 0;
+                    if (boosterCount <= 0) {
+                        this.buyBooster(booster.type);
+                        return;
+                    }
 
                     if (this.isWandActive) {
                         this.isWandActive = false;
@@ -2718,10 +2784,20 @@ export class Game extends Scene {
                 });
             }
 
-            if (booster.key === "booster_hammer") {
+            if (booster.type === "booster_hammer") {
                 icon.on("pointerdown", () => {
+                    const boosterCount =
+                        useGameStore
+                            .getState()
+                            .profile.boosters.find(
+                                (b) => b.type === booster.type
+                            )?.count ?? 0;
+                    console.log(boosterCount);
                     console.log("booster_hammer");
-                    if (booster.count <= 0) return;
+                    if (boosterCount <= 0) {
+                        this.buyBooster(booster.type);
+                        return;
+                    }
 
                     if (this.isHammerActive) {
                         this.isHammerActive = false;
@@ -2746,9 +2822,18 @@ export class Game extends Scene {
                 });
             }
 
-            if (booster.key === "booster_glove") {
+            if (booster.type === "booster_glove") {
                 icon.on("pointerdown", () => {
-                    if (booster.count <= 0) return;
+                    const boosterCount =
+                        useGameStore
+                            .getState()
+                            .profile.boosters.find(
+                                (b) => b.type === booster.type
+                            )?.count ?? 0;
+                    if (boosterCount <= 0) {
+                        this.buyBooster(booster.type);
+                        return;
+                    }
 
                     if (this.isGloveActive) {
                         this.isGloveActive = false;
@@ -2800,7 +2885,8 @@ export class Game extends Scene {
                 tile.setData("iceSprite", null);
             }
 
-            this.decreaseBoosterCount("booster_wand");
+            // this.decreaseBoosterCount("booster_wand");
+            useGameStore.getState().decreaseBoosterCount("booster_wand");
             return;
         }
 
@@ -2821,6 +2907,7 @@ export class Game extends Scene {
                     tweens,
                     tilesToDestroyLater
                 );
+                this.updateGoalProgress(sprite.getData("type"));
 
                 await Promise.all(tweens);
                 tilesToDestroyLater.forEach((t) => t.destroy());
@@ -2832,7 +2919,8 @@ export class Game extends Scene {
                 await this.processMatchesLoop();
             }
 
-            this.decreaseBoosterCount("booster_wand");
+            // this.decreaseBoosterCount("booster_wand");
+            useGameStore.getState().decreaseBoosterCount("booster_wand");
             return;
         }
 
@@ -2847,13 +2935,15 @@ export class Game extends Scene {
                 tweens,
                 tilesToDestroyLater
             );
+            this.updateGoalProgress(tile.getData("type"));
 
             await Promise.all(tweens);
             tilesToDestroyLater.forEach((t) => t.destroy());
 
             this.grid[y][x] = null;
 
-            this.decreaseBoosterCount("booster_wand");
+            // this.decreaseBoosterCount("booster_wand");
+            useGameStore.getState().decreaseBoosterCount("booster_wand");
             this.score += 1;
             this.updateScore();
 
@@ -2882,17 +2972,7 @@ export class Game extends Scene {
         });
     }
 
-    decreaseBoosterCount(boosterKey: string) {
-        const container = this.boosterContainers?.[boosterKey];
-        if (!container) return;
 
-        const badgeText = container.getByName(
-            "badgeText"
-        ) as Phaser.GameObjects.Text;
-        let count = parseInt(badgeText.text);
-        count = Math.max(0, count - 1);
-        badgeText.setText(String(count));
-    }
 
     clearActiveBoosterVisual() {
         if (this.activeBoosterTween) {
@@ -3064,6 +3144,7 @@ export class Game extends Scene {
                     tweens,
                     tilesToDestroyLater
                 );
+                this.updateGoalProgress(tile.getData("type"));
                 this.score += 1;
                 this.updateScore();
             } else {
@@ -3107,7 +3188,8 @@ export class Game extends Scene {
             await this.activateHelperChain(helpersToActivate);
         }
 
-        this.decreaseBoosterCount("booster_hammer");
+        // this.decreaseBoosterCount("booster_hammer");
+        useGameStore.getState().decreaseBoosterCount("booster_hammer");
         await delayPromise(this, 100);
         await this.dropTiles();
         await this.fillEmptyTiles();
@@ -3156,6 +3238,10 @@ export class Game extends Scene {
         tile.setData("iceSprite", null);
     }
 
+    buyBooster(booster: string): void {
+        this.scene.pause("Game");
+        this.scene.launch("BuyBoosters");
+    }
     create() {
         this.score = 0;
         this.holePositions = new Set();
@@ -3382,14 +3468,21 @@ export class Game extends Scene {
         this.movesText.setResolution(dpr < 2 ? 2 : dpr);
         this.movesText.setDepth(101);
 
+        this.movesText.setText(`${useGameStore.getState().remainingMoves}`);
+
+        this.unsubscribeMoves = useGameStore.subscribe(
+            (state) => state.remainingMoves,
+            (moves) => {
+                this.movesText.setText(`${moves}`);
+            }
+        );
+
         const movesBg = this.add.image(0, 0, "moves_bg");
         movesBg.setOrigin(0.5);
-        movesBg.setScale(0.357*dpr);
+        movesBg.setScale(0.357 * dpr);
         movesBg.setDepth(100);
 
         this.movesContainer.add([movesBg, movesIcon, this.movesText]);
-
-        this.updateMovesUI();
 
         this.pauseButton = this.add.image(
             this.offsetX + cellSize * cols - cellSize / 2,
@@ -3411,8 +3504,8 @@ export class Game extends Scene {
             // });
             // this.scene.pause("Game");
 
-           useGameStore.getState().setScore(this.score);
-            
+            useGameStore.getState().setScore(this.score);
+
             this.scene.stop("Game");
             this.scene.start("MainMenu");
         });
@@ -3438,7 +3531,7 @@ export class Game extends Scene {
 
         const scoreBg = this.add.image(0, 0, "score_bg");
         scoreBg.setOrigin(0.5);
-        scoreBg.setScale(0.357*dpr);
+        scoreBg.setScale(0.357 * dpr);
         scoreBg.setDepth(100);
 
         this.scoreContainer.add([scoreBg, scoreIcon, this.scoreText]);
@@ -3455,16 +3548,24 @@ export class Game extends Scene {
         // logo.setScale(0.333 * dpr);
 
         this.createBoostersPanel();
+        this.events.once("shutdown", this.handleShutdown, this);
     }
 
     init(data: { config: LevelConfig }) {
+        useGameStore.getState().initLevelState(data.config);
+        this.score
         this.levelConfig = data.config;
-        this.remainingMoves = this.levelConfig.moves;
         this.rows = this.levelConfig.rows;
         this.cols = this.levelConfig.cols;
 
         this.scaleFactor = 1;
         this.offsetX = 0;
         this.offsetY = 0;
+    }
+
+    handleShutdown() {
+        console.log("shutdown");
+        this.unsubscribeMoves?.();
+        this.unsubscribeGoals?.();
     }
 }

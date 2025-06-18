@@ -1,6 +1,6 @@
 {
-    "name": "template-react-ts",
-    "description": "A Phaser 3 TypeScript project template that demonstrates React communication and uses Vite for bundling.",
+    "name": "winelab-match3",
+    "description": "winelab-match3 game on React, Phaser, Zustand",
     "version": "1.1.0",
     "repository": {
         "type": "git",

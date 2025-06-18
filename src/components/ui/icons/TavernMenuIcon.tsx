@@ -1,9 +1,9 @@
 const TavernMenuIcon = () => {
     return (
         <img
-            src="assets/images/navbar/TasksMenuIcon.png"
+            src="assets/images/navbar/TavernMenuIcon.png"
             alt="Раздел Таверны"
-            width={50}
+            width={58}
         />
     );
 };

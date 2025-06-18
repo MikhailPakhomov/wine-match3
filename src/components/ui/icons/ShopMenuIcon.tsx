@@ -4,7 +4,7 @@ const ShopMenuIcon = () => {
                 <img
             src="assets/images/navbar/ShopMenuIcon.png"
             alt="Раздел Магазина"
-            width={48}
+            width={58}
         />
 
     );

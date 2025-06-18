@@ -3,10 +3,6 @@ export interface LevelGoal {
     count: number;
 }
 
-export interface Booster {
-    key: string;
-    count: number;
-}
 
 export interface LevelConfig {
     id: number;
@@ -17,7 +13,6 @@ export interface LevelConfig {
     elements: string[];
     difficult: string;
     goals: LevelGoal[];
-    boosters?: Booster[];
     grid: (null | {
         type: string;
         strength?: number;
@@ -481,7 +476,7 @@ export const levelConfigs: LevelConfig[] = [
 
     {
         id: 7,
-        name: "Уровень 13",
+        name: "Уровень 7",
         rows: 5,
         cols: 5,
         isCompleted: false,
@@ -856,7 +851,6 @@ export const levelConfigs: LevelConfig[] = [
         elements: ["energy", "message", "smartphone", "sim"],
         goals: [{ type: "box_full", count: 2 }],
         grid: [
-            
             [
                 null,
                 {
@@ -941,11 +935,7 @@ export const levelConfigs: LevelConfig[] = [
             { type: "smartphone", count: 25 },
             { type: "box_full", count: 15 },
         ],
-        boosters: [
-            { key: "booster_wand", count: 3 },
-            { key: "booster_hammer", count: 2 },
-            { key: "booster_glove", count: 1 },
-        ],
+
         grid: [
             [
                 { type: "phone" },

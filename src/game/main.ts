@@ -9,6 +9,7 @@ import { Shop } from "./scenes/Shop";
 import { Tavern } from "./scenes/Tavern";
 import { Tasks } from "./scenes/Tasks";
 import { Help } from "./scenes/Help";
+import { BuyBoosters } from "./scenes/BuyBoosters";
 
 const deviceWidth = window.innerWidth;
 const deviceHeight = window.innerHeight;
@@ -16,7 +17,7 @@ const deviceHeight = window.innerHeight;
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: "game-container",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#000000",
 
     scale: {
         mode: Phaser.Scale.FIT,
@@ -35,6 +36,7 @@ const config: Phaser.Types.Core.GameConfig = {
         Tavern,
         Tasks,
         Help,
+        BuyBoosters,
     ],
 };
 

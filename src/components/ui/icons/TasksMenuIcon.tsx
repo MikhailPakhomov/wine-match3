@@ -3,7 +3,7 @@ const TasksMenuIcon = () => {
         <img
             src="assets/images/navbar/TasksMenuIcon.png"
             alt="Раздел Заданий"
-            width={48}
+            width={58}
         />
     );
 };

@@ -24,6 +24,7 @@ export class Preloader extends Scene {
     preload() {
         this.load.setPath("assets");
         this.load.image("book", "images/book.png");
+        this.load.image("logo", "images/logo.png");
         this.load.image("tile_bg", "images/tile_bg.png");
         this.load.image("field_bg", "images/field_bg.png");
         this.load.image("moves_bg", "images/moves_bg.png");
@@ -45,6 +46,12 @@ export class Preloader extends Scene {
         this.load.image("booster_wand", "images/booster_wand.png");
         this.load.image("booster_hammer", "images/booster_hammer.png");
         this.load.image("booster_glove", "images/booster_glove.png");
+        this.load.image("booster_bg", "images/booster_bg.png");
+        this.load.image("boosterCount_bg", "images/boosterCount_bg.png");
+        this.load.image("boosterBuy_btn", "images/boosterBuy_btn.png");
+
+        this.load.image("modalContent_bg", "images/ui/modalContent_bg.png");
+        this.load.image("buy_booster_btn", "images/ui/buy_booster_btn.png");
     }
 
     create() {
